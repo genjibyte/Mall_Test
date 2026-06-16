@@ -18,14 +18,19 @@ public class OrderClient {
                 RestClient.givenAuth(token).body(cartIds).post("/mall-portal/order/generateConfirmOrder"));
     }
 
+    /** 下单（裸 body，负例用——可省略字段如不传 memberReceiveAddressId）。 */
+    public ApiResponse generateOrder(String token, Map<String, Object> param) {
+        return ApiResponse.from(
+                RestClient.givenAuth(token).body(param).post("/mall-portal/order/generateOrder"));
+    }
+
     /** 下单。OrderParam: memberReceiveAddressId/payType/cartIds[(+couponId/useIntegration)]。 */
     public ApiResponse generateOrder(String token, long addressId, int payType, List<Long> cartIds) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("memberReceiveAddressId", addressId);
         body.put("payType", payType);
         body.put("cartIds", cartIds);
-        return ApiResponse.from(
-                RestClient.givenAuth(token).body(body).post("/mall-portal/order/generateOrder"));
+        return generateOrder(token, body);
     }
 
     /** 支付成功回调。query: orderId, payType。 */

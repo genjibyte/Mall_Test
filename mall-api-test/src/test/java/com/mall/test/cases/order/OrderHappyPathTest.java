@@ -1,14 +1,13 @@
 package com.mall.test.cases.order;
 
 import com.mall.test.auth.TokenFactory;
-import com.mall.test.client.CartClient;
 import com.mall.test.client.OrderClient;
 import com.mall.test.config.TestConfig;
 import com.mall.test.core.ApiResponse;
 import com.mall.test.fixture.MemberFixture;
 import com.mall.test.fixture.OrderFixture;
 import com.mall.test.fixture.SkuStockFixture;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.mall.test.flow.OrderFlow;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -32,7 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Feature("订单生成与支付")
 class OrderHappyPathTest {
 
-    private final CartClient cart = new CartClient();
     private final OrderClient order = new OrderClient();
 
     @Test
@@ -47,16 +45,9 @@ class OrderHappyPathTest {
         SkuStockFixture.SkuState before = SkuStockFixture.read(sku.skuId());
         BigDecimal expectedPay = sku.price().multiply(BigDecimal.valueOf(qty));
 
-        // 0. 隔离：清空购物车
-        Allure.step("清空购物车（隔离）", () -> assertSuccess(cart.clear(token)));
-
-        // 1. 加购（必须带 price）
-        Allure.step("加购 skuId=" + sku.skuId() + " price=" + sku.price(), () ->
-                assertSuccess(cart.add(token, sku.productId(), sku.skuId(), qty,
-                        sku.price(), sku.skuCode(), sku.productName())));
-
-        // 2. 取购物车项 id
-        long cartId = resolveCartId(token, sku.skuId());
+        // 0-2. 隔离 + 加购，取 cartId
+        OrderFlow.clearCart(token);
+        long cartId = OrderFlow.addToCart(token, sku, qty);
 
         // 3. 确认单：应付金额 == price*qty
         Allure.step("生成确认单", () -> {
@@ -85,17 +76,5 @@ class OrderHappyPathTest {
         SkuStockFixture.SkuState afterPay = SkuStockFixture.read(sku.skuId());
         assertEquals(before.stock() - qty, afterPay.stock(), "支付应扣减真实库存 stock-qty");
         assertEquals(before.lockStock(), afterPay.lockStock(), "支付应释放锁定库存 lock_stock 复原");
-    }
-
-    /** 从含促销购物车列表里按 productSkuId 找到购物车项 id（即下单用的 cartId）。 */
-    private long resolveCartId(String token, long productSkuId) {
-        ApiResponse promo = cart.listPromotion(token);
-        assertSuccess(promo);
-        for (JsonNode item : promo.data()) {
-            if (item.path("productSkuId").asLong() == productSkuId) {
-                return item.path("id").asLong();
-            }
-        }
-        throw new AssertionError("购物车中未找到 skuId=" + productSkuId + " 的条目: " + promo);
     }
 }

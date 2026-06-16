@@ -38,6 +38,11 @@ public final class SkuStockFixture {
                 String.valueOf(row.get("name")));
     }
 
+    /** 直接设置锁定库存（负例：置 lock_stock=stock 使 realStock=0 触发"库存不足"）。 */
+    public static void setLockStock(long skuId, int lockStock) {
+        Db.update("UPDATE pms_sku_stock SET lock_stock = ? WHERE id = ?", lockStock, skuId);
+    }
+
     public static SkuState read(long skuId) {
         Map<String, Object> row = Db.queryRow(
                 "SELECT stock, lock_stock FROM pms_sku_stock WHERE id = ?", skuId);
