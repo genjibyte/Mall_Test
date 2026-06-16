@@ -39,7 +39,13 @@
 - **证据**：OmsPortalOrderServiceImpl:297-325 / cancelTimeOutOrder:268-294。
 - **测试**：领券+用积分下单后取消，断言 `sms_coupon_history.use_status=0`、`ums_member.integration` 复原、`lock_stock` 复原。
 
-> 注：R1/R2 在源码层未见专门防护；以"正确电商行为"为预期断言即可暴露。
+### R6 · 积分下单取消/超时不退还积分（测试中实测发现）
+- **症状**：用积分下单后取消（或超时），积分**不回退**；且 `oms_order.use_integration` 恒为 `NULL`。
+- **根因**：`generateOrder` 在 `orderMapper.insert(order)`（已落库）**之后**才 `order.setUseIntegration(orderParam.getUseIntegration())`，此后无 update 持久化该字段；`cancelOrder`/`cancelTimeOutOrder` 用 `if (order.getUseIntegration() != null)` 判断是否退积分 → 读到 NULL → **跳过退积分**。
+- **证据**：[OmsPortalOrderServiceImpl.java:224](../mall-swarm/mall-portal/src/main/java/com/macro/mall/portal/service/impl/OmsPortalOrderServiceImpl.java)(insert) vs :236(setUseIntegration)；:320-323(取消退积分判空)。实测 `oms_order.use_integration=NULL`（order 85，pay_amount 99 抵扣已生效，但 use_integration 未落库）。
+- **测试**：`OrderIntegrationTest.cancel_should_refund_used_integration`（`@KnownDefect`，默认跳过）。正确行为（抵扣金额、扣减积分）已作为常驻守护通过。
+
+> 注：R1/R2/R6 在源码层未见专门防护；以"正确电商行为"为预期断言即可暴露。
 
 ---
 

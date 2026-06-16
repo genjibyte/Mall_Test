@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -58,6 +59,21 @@ public final class Db {
             }
         } catch (SQLException e) {
             throw new RuntimeException("DB query failed: " + sql, e);
+        }
+    }
+
+    /** 插入并返回自增主键。 */
+    public static long insertReturnId(String sql, Object... args) {
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            bind(ps, args);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (!rs.next()) throw new IllegalStateException("no generated key for: " + sql);
+                return rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("DB insert failed: " + sql, e);
         }
     }
 

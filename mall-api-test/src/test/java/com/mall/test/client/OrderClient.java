@@ -24,12 +24,20 @@ public class OrderClient {
                 RestClient.givenAuth(token).body(param).post("/mall-portal/order/generateOrder"));
     }
 
-    /** 下单。OrderParam: memberReceiveAddressId/payType/cartIds[(+couponId/useIntegration)]。 */
+    /** 下单（无券/积分）。 */
     public ApiResponse generateOrder(String token, long addressId, int payType, List<Long> cartIds) {
+        return generateOrder(token, addressId, payType, cartIds, null, null);
+    }
+
+    /** 下单（可带优惠券与积分）。couponId/useIntegration 为 null 则不传。 */
+    public ApiResponse generateOrder(String token, long addressId, int payType, List<Long> cartIds,
+                                     Long couponId, Integer useIntegration) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("memberReceiveAddressId", addressId);
         body.put("payType", payType);
         body.put("cartIds", cartIds);
+        if (couponId != null) body.put("couponId", couponId);
+        if (useIntegration != null) body.put("useIntegration", useIntegration);
         return generateOrder(token, body);
     }
 

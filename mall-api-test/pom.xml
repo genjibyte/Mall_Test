@@ -64,6 +64,12 @@
             <version>${awaitility.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>5.2.0</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Allure 报告：junit5 监听器经 ServiceLoader 自动注册；rest-assured filter 抓取 HTTP -->
         <dependency>
             <groupId>io.qameta.allure</groupId>

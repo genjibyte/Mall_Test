@@ -41,4 +41,11 @@ public final class TestConfig {
     public static String memberPassword() { return get("member.password"); }
     public static String adminUsername()  { return get("admin.username"); }
     public static String adminPassword()  { return get("admin.password"); }
+    public static String redisHost()      { return get("redis.host"); }
+    public static int redisPort()         { return Integer.parseInt(get("redis.port")); }
+
+    /** mall-portal 会员信息缓存的 Redis key：<prefix>:<memberId>。 */
+    public static String memberCacheKey(long memberId) {
+        return get("redis.member-key-prefix") + ":" + memberId;
+    }
 }
