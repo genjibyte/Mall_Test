@@ -35,9 +35,16 @@ public final class TokenFactory {
         });
     }
 
-    /** 用指定凭据登录拿 token（用于越权/多账号用例），不缓存。 */
+    /** 用指定凭据登录会员（用于越权/多账号用例），不缓存。 */
     public static String memberToken(String username, String password) {
         ApiResponse r = AUTH.loginMember(username, password);
+        ApiAssertions.assertSuccess(r);
+        return r.dataText("token");
+    }
+
+    /** 用指定凭据登录管理员（用于受限角色 403 用例），不缓存。 */
+    public static String adminToken(String username, String password) {
+        ApiResponse r = AUTH.loginAdmin(username, password);
         ApiAssertions.assertSuccess(r);
         return r.dataText("token");
     }

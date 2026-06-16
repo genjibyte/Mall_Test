@@ -21,6 +21,7 @@ mall-swarm 是一套 9 模块的微服务电商系统（Spring Cloud Alibaba 202
 | 5 | [05-quality-gates.md](05-quality-gates.md) | 质量门禁 | 断言规则、隔离、覆盖目标、DoD、CI 门禁 |
 | 6 | [06-historical-badcases.md](06-historical-badcases.md) | 历史 badcase | 源码级缺陷（测试靶点）+ 部署/运行踩坑（含社区 issue） |
 | 7 | [07-handover-protocol.md](07-handover-protocol.md) | 交接协议 | 冷启动流程、证据规则、记忆指针、更新协议 |
+| 8 | [08-cicd-design.md](08-cicd-design.md) | CI/CD 设计 | 流水线分阶段设计预案（**暂不实施**），环境策略与门禁 |
 
 配套（已存在，非本包但强相关）：
 - 部署产物与脚本：[../deploy/](../deploy/)（`docker-compose-env.yml` / `run-services.ps1` / `README.md`）
