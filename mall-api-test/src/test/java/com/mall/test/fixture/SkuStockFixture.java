@@ -38,6 +38,30 @@ public final class SkuStockFixture {
                 String.valueOf(row.get("name")));
     }
 
+    /** 找一个指定 promotion_type、已上架、可用量>=needQty 的 SKU（促销金额用例）。 */
+    public static OrderableSku findOrderableByPromotionType(int promotionType, int needQty) {
+        Map<String, Object> row = Db.queryRow(
+                "SELECT s.id, s.product_id, s.price, s.stock, s.lock_stock, s.sku_code, p.name " +
+                "FROM pms_sku_stock s JOIN pms_product p ON p.id = s.product_id " +
+                "WHERE p.publish_status = 1 AND p.delete_status = 0 AND p.promotion_type = ? " +
+                "AND (s.stock - s.lock_stock) >= ? ORDER BY s.id LIMIT 1", promotionType, needQty);
+        if (row == null) throw new IllegalStateException("找不到 promotion_type=" + promotionType + " 的可下单 SKU");
+        return new OrderableSku(
+                ((Number) row.get("id")).longValue(),
+                ((Number) row.get("product_id")).longValue(),
+                new BigDecimal(row.get("price").toString()),
+                ((Number) row.get("stock")).intValue(),
+                ((Number) row.get("lock_stock")).intValue(),
+                String.valueOf(row.get("sku_code")),
+                String.valueOf(row.get("name")));
+    }
+
+    /** SKU 促销价（单品促销用）。 */
+    public static BigDecimal promotionPrice(long skuId) {
+        Map<String, Object> row = Db.queryRow("SELECT promotion_price FROM pms_sku_stock WHERE id = ?", skuId);
+        return new BigDecimal(row.get("promotion_price").toString());
+    }
+
     /** 直接设置锁定库存（负例：置 lock_stock=stock 使 realStock=0 触发"库存不足"）。 */
     public static void setLockStock(long skuId, int lockStock) {
         Db.update("UPDATE pms_sku_stock SET lock_stock = ? WHERE id = ?", lockStock, skuId);
