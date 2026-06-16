@@ -1,0 +1,87 @@
+# mall-swarm 本地测试基础设施 (self-contained, 不依赖 mall-swarm 源码)
+# 宿主机默认端口被其他 QA 栈/本地 MySQL 占用，这里全部映射到 +10000 的隔离端口；
+# 容器内部端口保持标准，仅宿主机侧改端口。服务启动时用命令行参数覆盖指向这些端口。
+# 数据使用 named volumes，便于 `docker compose down -v` 一键重置。
+name: mall-env
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mall-mysql
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mall           # 自动创建空库 mall，随后导入 mall.sql
+    ports:
+      - "23306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7
+    container_name: mall-redis
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis_data:/data
+
+  nacos:
+    image: nacos/nacos-server:v2.1.0
+    container_name: mall-nacos
+    restart: unless-stopped
+    environment:
+      MODE: standalone
+    ports:
+      - "18848:8848"                 # HTTP / 控制台 (http://localhost:18848/nacos)
+      - "19848:9848"                 # gRPC，客户端按 httpPort+1000=19848 推导，必须映射
+      - "19849:9849"                 # gRPC raft
+    volumes:
+      - nacos_data:/home/nacos/data
+
+  rabbitmq:
+    image: rabbitmq:3.9.11-management
+    container_name: mall-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: mall
+      RABBITMQ_DEFAULT_PASS: mall
+      RABBITMQ_DEFAULT_VHOST: /mall
+    ports:
+      - "5673:5672"
+      - "15673:15672"                # 管理控制台 (http://localhost:15673)
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  elasticsearch:
+    image: elasticsearch:7.17.3
+    container_name: mall-elasticsearch
+    restart: unless-stopped
+    environment:
+      - cluster.name=elasticsearch
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx1024m
+    ports:
+      - "19200:9200"
+      - "19300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  mongo:
+    image: mongo:4
+    container_name: mall-mongo
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mysql_data:
+  redis_data:
+  nacos_data:
+  rabbitmq_data:
+  es_data:
+  mongo_data:

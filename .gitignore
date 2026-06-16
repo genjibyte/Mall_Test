@@ -1,0 +1,20 @@
+# 第三方克隆仓库（macrozheng/mall-swarm，Apache-2.0）——被测对象，不纳入本仓库
+/mall-swarm/
+
+# 构建产物
+**/target/
+
+# 运行日志与构建日志
+/deploy/logs/
+*.log
+
+# Allure 结果（按需本地生成）
+**/allure-results/
+**/allure-report/
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
