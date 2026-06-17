@@ -57,7 +57,7 @@
 ### 🟡 M5 · admin 模块覆盖薄（部分补齐）
 - 原：仅 login/info/deliver/product-create。
 - **进展（2026-06-17）**：新增 AdminProductManagementTest（批量上下架/新品/推荐/**审核**/**软删恢复**，自隔离）+ AdminOrderManagementTest（批量关单 status→4；并发现 **R8** 关单不释放 lock_stock 缺陷探针）。
-- 剩余：退货审核(oms_order_return)、SKU 库存维护、订单收货人/费用改单未测。
+- 剩余：~~退货审核~~**已覆盖**(OrderReturnApplyTest)、SKU 库存维护、订单收货人/费用改单未测。
 
 ### 🟢 L1–L4（低）
 - env.properties 含本地凭据入库（低敏感；真实环境应走 CI Secrets）。

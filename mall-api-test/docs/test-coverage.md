@@ -1,6 +1,6 @@
 # 测试覆盖总览
 
-当前 **50 个用例**：默认 `mvn test` 跑 **49（43 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
+当前 **53 个用例**：默认 `mvn test` 跑 **52（46 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
 
 ## 按业务链路
 
@@ -25,6 +25,7 @@
 | | AdminProductSearchTest | 跨服务：管理员建商品 → ES 可搜（端到端） |
 | **#5 优惠券营销** | MemberCouponTest | 领取(/member/coupon/add) + per_limit 重复领取被拒 |
 | | OrderCouponTest | 下单核销 + 取消回退 |
+| **退货售后** | OrderReturnApplyTest | 会员申请→后台确认(0→1)/拒绝(0→3)/非法状态 no-op(自隔离) |
 | **会员中心** | MemberAddressCrudTest | 收货地址 新增-详情-修改-删除 |
 | **商品浏览** | ProductBrowseTest | 首页内容、商品详情、分类树、推荐品牌（公开） |
 | **后台管理** | AdminProductManagementTest | 商品批量上下架/新品/推荐/审核/软删恢复（自隔离：建商品→断言 DB→删除） |
