@@ -3,11 +3,20 @@ package com.mall.test.client;
 import com.mall.test.core.ApiResponse;
 import com.mall.test.core.RestClient;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 后台管理接口客户端（/mall-admin/**）。需 admin token（StpUtil 体系）。
- * 仅放置鉴权用例所需的少量受保护端点。
  */
 public class AdminClient {
+
+    /** 批量发货（订单 status 1->2）。body = [{orderId,deliveryCompany,deliverySn}]。 */
+    public ApiResponse deliver(String token, long orderId, String company, String sn) {
+        return ApiResponse.from(RestClient.givenAuth(token)
+                .body(List.of(Map.of("orderId", orderId, "deliveryCompany", company, "deliverySn", sn)))
+                .post("/mall-admin/order/update/delivery"));
+    }
 
     /** 当前登录管理员信息（返回 roles/menus）。资源 31，多数角色可访问。 */
     public ApiResponse info(String token) {
