@@ -1,6 +1,6 @@
 # 测试覆盖总览
 
-当前 **41 个用例：36 通过 + 5 已知缺陷跳过(@KnownDefect)**。`mvn test` 全绿（已知缺陷默认跳过、不阻断门禁）。
+当前 **43 个用例：37 通过 + 6 跳过（5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**。`mvn test` 全绿（缺陷探针/维护默认跳过、不阻断门禁）。
 
 ## 按业务链路
 
@@ -27,6 +27,8 @@
 | **商品浏览** | ProductBrowseTest | 首页内容、商品详情、分类树、推荐品牌（公开） |
 | **后台管理** | AdminProductManagementTest | 商品批量上下架/新品/推荐（自隔离：建商品→断言 DB→删除） |
 | | AdminOrderManagementTest | 管理员批量关单 status→4（+ R8 关单不退锁库存探针） |
+| **测试基建(H1)** | DataIntegrityTest | 库存完整性守卫：无负锁库存、无超锁(lock>stock)，随套件常驻绿 |
+| | DataMaintenanceTest | 数据卫生维护(@Disabled 手动)：复位负库存 + 硬删软删购物车 |
 
 ## 缺陷探针（@KnownDefect，按"正确行为"断言，默认跳过）
 
@@ -51,7 +53,8 @@
 ## 运行
 
 ```bash
-mvn test                                  # 全部(已知缺陷自动跳过)
+mvn test                                  # 全部(缺陷探针/维护自动跳过)
 mvn -Dtest=OrderDefectProbeTest test      # 仅缺陷探针(会失败=暴露缺陷)
+mvn -Dtest=DataMaintenanceTest "-Djunit.jupiter.conditions.deactivate=*" test  # 手动清理共享数据漂移(H1)
 allure serve target/allure-results        # 报告
 ```
