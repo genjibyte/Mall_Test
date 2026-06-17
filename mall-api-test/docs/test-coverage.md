@@ -1,6 +1,6 @@
 # 测试覆盖总览
 
-当前 **46 个用例**：默认 `mvn test` 跑 **45（39 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
+当前 **50 个用例**：默认 `mvn test` 跑 **49（43 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
 
 ## 按业务链路
 
@@ -21,6 +21,7 @@
 | **#3 超时取消** | OrderTimeoutTest / OrderCancelTest | 超时触发(同步 cancelTimeOutOrder) + 逐单回滚 |
 | | OrderTimeoutMqTest `@slow` | **真实** MQ 延迟队列超时：降 overtime=1→TTL队列→DLX→自动关单(4)+释放锁库存 |
 | **#4 商品搜索** | SearchChainTest | DB→ES 导入、全量/关键词检索、create 后 Awaitility 轮询可搜 |
+| | SearchFilterSortTest | 综合搜索：按品牌/分类筛选(全命中)、价格升/降序(单调)——属性型断言 |
 | | AdminProductSearchTest | 跨服务：管理员建商品 → ES 可搜（端到端） |
 | **#5 优惠券营销** | MemberCouponTest | 领取(/member/coupon/add) + per_limit 重复领取被拒 |
 | | OrderCouponTest | 下单核销 + 取消回退 |
