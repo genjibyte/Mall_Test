@@ -15,15 +15,20 @@ public final class CouponFixture {
 
     public record TestCoupon(long couponId, long historyId, BigDecimal amount) {}
 
-    /** 创建一张面额 amount 的全场通用券并发给会员（未使用）。 */
+    /** 创建一张面额 amount、门槛 0 的全场通用券并发给会员（未使用）。 */
     public static TestCoupon createUsableUniversalCoupon(long memberId, BigDecimal amount) {
+        return createUniversalCoupon(memberId, amount, new BigDecimal("0.00"));
+    }
+
+    /** 创建一张面额 amount、使用门槛 minPoint 的全场通用券并发给会员（未使用）。 */
+    public static TestCoupon createUniversalCoupon(long memberId, BigDecimal amount, BigDecimal minPoint) {
         Timestamp now = Timestamp.valueOf(LocalDateTime.now());
         Timestamp future = Timestamp.valueOf(LocalDateTime.now().plusYears(5));
         long couponId = Db.insertReturnId(
                 "INSERT INTO sms_coupon(type,name,platform,count,amount,per_limit,min_point,start_time,end_time," +
                 "use_type,note,publish_count,use_count,receive_count,enable_time,member_level) " +
-                "VALUES(0,'TEST-AUTO-COUPON',0,999,?,99,0.00,?,?,0,'auto test',999,0,0,?,0)",
-                amount, now, future, now);
+                "VALUES(0,'TEST-AUTO-COUPON',0,999,?,99,?,?,?,0,'auto test',999,0,0,?,0)",
+                amount, minPoint, now, future, now);
         long historyId = Db.insertReturnId(
                 "INSERT INTO sms_coupon_history(coupon_id,member_id,coupon_code,member_nickname,get_type,create_time,use_status) " +
                 "VALUES(?,?,?,'test',1,?,0)",
