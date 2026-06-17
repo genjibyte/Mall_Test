@@ -33,6 +33,15 @@ public final class TestConfig {
         return v;
     }
 
+    /** 同 get，但缺失时返回默认值（用于可选配置，如 RabbitMQ 管理端，默认即本地部署值）。 */
+    public static String getOrDefault(String key, String def) {
+        try {
+            return get(key);
+        } catch (IllegalArgumentException e) {
+            return def;
+        }
+    }
+
     public static String gatewayBaseUrl() { return get("gateway.base-url"); }
     public static String dbUrl()          { return get("db.url"); }
     public static String dbUsername()     { return get("db.username"); }
@@ -48,4 +57,10 @@ public final class TestConfig {
     public static String memberCacheKey(long memberId) {
         return get("redis.member-key-prefix") + ":" + memberId;
     }
+
+    // RabbitMQ 管理端（用于 MQ 延迟超时用例清队列），默认即本地部署值，可经 env 覆盖。
+    public static String rabbitMgmtUrl()  { return getOrDefault("rabbit.mgmt-url", "http://localhost:15673"); }
+    public static String rabbitUsername() { return getOrDefault("rabbit.username", "mall"); }
+    public static String rabbitPassword() { return getOrDefault("rabbit.password", "mall"); }
+    public static String rabbitVhost()    { return getOrDefault("rabbit.vhost", "/mall"); }
 }

@@ -19,6 +19,8 @@
         <awaitility.version>4.2.2</awaitility.version>
         <allure.version>2.29.0</allure.version>
         <surefire.version>3.5.2</surefire.version>
+        <!-- 默认排除 slow 标签(MQ 真实延迟等 >60s 用例)；夜间用 -Pslow 全量跑 -->
+        <excluded.groups>slow</excluded.groups>
     </properties>
 
     <dependencyManagement>
@@ -98,6 +100,8 @@
                 <configuration>
                     <!-- 不因测试失败中断构建报告；CI 由报告判定门禁 -->
                     <testFailureIgnore>false</testFailureIgnore>
+                    <!-- 默认排除 slow（可 -Dexcluded.groups= 或 -Pslow 取消排除） -->
+                    <excludedGroups>${excluded.groups}</excludedGroups>
                     <systemPropertyVariables>
                         <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
                     </systemPropertyVariables>
@@ -105,6 +109,16 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- mvn test -Pslow ：取消 slow 排除，连同 MQ 真实延迟等慢用例一起跑(夜间/全量) -->
+        <profile>
+            <id>slow</id>
+            <properties>
+                <excluded.groups></excluded.groups>
+            </properties>
+        </profile>
+    </profiles>
 
     <repositories>
         <repository>

@@ -46,9 +46,9 @@
 - 因共享状态，`junit.jupiter.execution.parallel.enabled=false`。规模上来后串行变慢。
 - **建议**：完成 H1 隔离后按资源分组开并行。
 
-### 🟡 M3 · 真实 MQ 延迟路径未覆盖
-- 仅同步 `cancelTimeOutOrder` 覆盖超时；RabbitMQ 延迟队列(CancelOrderReceiver, 60s+)未直接测。
-- **建议**：加 `@Tag("slow")` 的 Awaitility 用例（normal_order_overtime=1，轮询至 status=4），CI nightly 跑。
+### 🟢 M3 · 真实 MQ 延迟路径（已覆盖，2026-06-17）
+- ✅ 新增 `OrderTimeoutMqTest`（`@Tag("slow")`，默认排除、`-Pslow` 跑）：降 normal_order_overtime=1 → 真实 TTL队列→DLX→CancelOrderReceiver → 轮询至 status=4 + 校验释放锁库存。实跑约 60s 通过。
+- **关键陷阱（已解决）**：RabbitMQ 按消息 TTL 存在**队头阻塞**——既有长 TTL 消息(实测积压 68 条)会拖住新的短 TTL 消息。用例下单前经 `RabbitFixture.purgeQueue` 清空 ttl 队列保证确定性。
 
 ### 🟡 M4 · clearCart 吞错
 - 因空车 clear 返回 500(R7)，`OrderFlow.clearCart` 静默忽略所有失败，可能掩盖真实错误。
