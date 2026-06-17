@@ -34,6 +34,21 @@ public final class ProductFixture {
         return Db.queryLong("SELECT id FROM pms_product WHERE product_sn = ? ORDER BY id DESC LIMIT 1", productSn);
     }
 
+    /** 上架状态 publish_status（0下架/1上架）。 */
+    public static int publishStatus(long productId) {
+        return (int) Db.queryLong("SELECT publish_status FROM pms_product WHERE id = ?", productId);
+    }
+
+    /** 新品状态 new_status（0/1）。 */
+    public static int newStatus(long productId) {
+        return (int) Db.queryLong("SELECT new_status FROM pms_product WHERE id = ?", productId);
+    }
+
+    /** 推荐状态 recommand_status（注意：DB 列名为 recommand，源码拼写）。 */
+    public static int recommendStatus(long productId) {
+        return (int) Db.queryLong("SELECT recommand_status FROM pms_product WHERE id = ?", productId);
+    }
+
     /** 删除测试商品（DB）。ES 侧用 SearchClient.deleteById 单独清理。 */
     public static void deleteProduct(long productId) {
         Db.update("DELETE FROM pms_product WHERE id = ?", productId);

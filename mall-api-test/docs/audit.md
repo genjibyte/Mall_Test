@@ -51,8 +51,10 @@
 - 因空车 clear 返回 500(R7)，`OrderFlow.clearCart` 静默忽略所有失败，可能掩盖真实错误。
 - **建议**：仅忽略空车特定情形，其余仍暴露。
 
-### 🟡 M5 · admin 模块覆盖薄
-- 仅 login/info/deliver/product-create。大量后台 CRUD/批量操作（上下架、审核、关单、退货审核）未测。
+### 🟡 M5 · admin 模块覆盖薄（部分补齐）
+- 原：仅 login/info/deliver/product-create。
+- **进展（2026-06-17）**：新增 AdminProductManagementTest（批量上下架/新品/推荐，自隔离）+ AdminOrderManagementTest（批量关单 status→4；并发现 **R8** 关单不释放 lock_stock 缺陷探针）。
+- 剩余：审核(verifyStatus)、退货审核、批量删除/恢复、SKU 库存维护未测。
 
 ### 🟢 L1–L4（低）
 - env.properties 含本地凭据入库（低敏感；真实环境应走 CI Secrets）。

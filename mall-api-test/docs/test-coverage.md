@@ -1,6 +1,6 @@
 # 测试覆盖总览
 
-当前 **37 个用例：33 通过 + 4 已知缺陷跳过(@KnownDefect)**。`mvn test` 全绿（已知缺陷默认跳过、不阻断门禁）。
+当前 **41 个用例：36 通过 + 5 已知缺陷跳过(@KnownDefect)**。`mvn test` 全绿（已知缺陷默认跳过、不阻断门禁）。
 
 ## 按业务链路
 
@@ -25,6 +25,8 @@
 | | OrderCouponTest | 下单核销 + 取消回退 |
 | **会员中心** | MemberAddressCrudTest | 收货地址 新增-详情-修改-删除 |
 | **商品浏览** | ProductBrowseTest | 首页内容、商品详情、分类树、推荐品牌（公开） |
+| **后台管理** | AdminProductManagementTest | 商品批量上下架/新品/推荐（自隔离：建商品→断言 DB→删除） |
+| | AdminOrderManagementTest | 管理员批量关单 status→4（+ R8 关单不退锁库存探针） |
 
 ## 缺陷探针（@KnownDefect，按"正确行为"断言，默认跳过）
 
@@ -34,6 +36,7 @@
 | R2 | paySuccess 无归属校验，可付他人订单 | OrderDefectProbeTest.paySuccess_should_reject_non_owner | windy 成功支付 test 订单 |
 | R4 | 并发下单超卖（无原子库存校验） | OrderDefectProbeTest.concurrent_orders_should_not_oversell | 库存2，5并发全成功 |
 | R6 | 积分下单取消不退积分(use_integration 未持久化) | OrderIntegrationTest.cancel_should_refund_used_integration | 取消后积分未回退 |
+| R8 | 管理员关单不释放 lock_stock（与用户取消/超时不一致 → 库存泄漏） | AdminOrderManagementTest.admin_close_should_release_locked_stock | 关单后 lock_stock 未复原(实测 1→应 0) |
 
 > R3（下单非事务）、R7（空车 clear 返回500，次要）见 [context-pack/06](../../context-pack/06-historical-badcases.md)，暂未做探针。
 

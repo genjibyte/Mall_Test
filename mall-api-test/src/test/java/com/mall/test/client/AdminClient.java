@@ -2,6 +2,7 @@ package com.mall.test.client;
 
 import com.mall.test.core.ApiResponse;
 import com.mall.test.core.RestClient;
+import io.restassured.http.ContentType;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,50 @@ public class AdminClient {
         return ApiResponse.from(RestClient.givenAuth(token)
                 .body(List.of(Map.of("orderId", orderId, "deliveryCompany", company, "deliverySn", sn)))
                 .post("/mall-admin/order/update/delivery"));
+    }
+
+    /** 批量上下架。form: ids(逗号分隔)/publishStatus(0下架/1上架)。纯 DB 更新 publish_status，无 ES 同步。 */
+    public ApiResponse updatePublishStatus(String token, List<Long> ids, int publishStatus) {
+        return ApiResponse.from(RestClient.givenAuth(token).contentType(ContentType.URLENC)
+                .formParam("ids", csv(ids)).formParam("publishStatus", publishStatus)
+                .post("/mall-admin/product/update/publishStatus"));
+    }
+
+    /** 批量设为新品。form: ids/newStatus(0/1)。 */
+    public ApiResponse updateNewStatus(String token, List<Long> ids, int newStatus) {
+        return ApiResponse.from(RestClient.givenAuth(token).contentType(ContentType.URLENC)
+                .formParam("ids", csv(ids)).formParam("newStatus", newStatus)
+                .post("/mall-admin/product/update/newStatus"));
+    }
+
+    /** 批量推荐商品。form: ids/recommendStatus(0/1)。 */
+    public ApiResponse updateRecommendStatus(String token, List<Long> ids, int recommendStatus) {
+        return ApiResponse.from(RestClient.givenAuth(token).contentType(ContentType.URLENC)
+                .formParam("ids", csv(ids)).formParam("recommendStatus", recommendStatus)
+                .post("/mall-admin/product/update/recommendStatus"));
+    }
+
+    /** 批量关闭订单（status->4）。form: ids/note。注意：后端只置 status，不释放 lock_stock（见 R8）。 */
+    public ApiResponse closeOrders(String token, List<Long> ids, String note) {
+        return ApiResponse.from(RestClient.givenAuth(token).contentType(ContentType.URLENC)
+                .formParam("ids", csv(ids)).formParam("note", note)
+                .post("/mall-admin/order/update/close"));
+    }
+
+    /** 备注订单并改状态。form: id/note/status。 */
+    public ApiResponse updateOrderNote(String token, long id, String note, int status) {
+        return ApiResponse.from(RestClient.givenAuth(token).contentType(ContentType.URLENC)
+                .formParam("id", id).formParam("note", note).formParam("status", status)
+                .post("/mall-admin/order/update/note"));
+    }
+
+    private static String csv(List<Long> ids) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            if (i > 0) sb.append(',');
+            sb.append(ids.get(i));
+        }
+        return sb.toString();
     }
 
     /** 当前登录管理员信息（返回 roles/menus）。资源 31，多数角色可访问。 */
