@@ -46,6 +46,20 @@ public class AdminClient {
                 .post("/mall-admin/product/update/recommendStatus"));
     }
 
+    /** 批量审核。form: ids/verifyStatus(0未审/1通过)/detail(审核意见)。 */
+    public ApiResponse updateVerifyStatus(String token, List<Long> ids, int verifyStatus, String detail) {
+        return ApiResponse.from(RestClient.givenAuth(token).contentType(ContentType.URLENC)
+                .formParam("ids", csv(ids)).formParam("verifyStatus", verifyStatus).formParam("detail", detail)
+                .post("/mall-admin/product/update/verifyStatus"));
+    }
+
+    /** 批量修改删除状态(软删/恢复)。form: ids/deleteStatus(0正常/1删除)。 */
+    public ApiResponse updateDeleteStatus(String token, List<Long> ids, int deleteStatus) {
+        return ApiResponse.from(RestClient.givenAuth(token).contentType(ContentType.URLENC)
+                .formParam("ids", csv(ids)).formParam("deleteStatus", deleteStatus)
+                .post("/mall-admin/product/update/deleteStatus"));
+    }
+
     /** 批量关闭订单（status->4）。form: ids/note。注意：后端只置 status，不释放 lock_stock（见 R8）。 */
     public ApiResponse closeOrders(String token, List<Long> ids, String note) {
         return ApiResponse.from(RestClient.givenAuth(token).contentType(ContentType.URLENC)

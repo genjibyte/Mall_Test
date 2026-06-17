@@ -73,4 +73,30 @@ class AdminProductManagementTest {
         assertSuccess(admin.updateRecommendStatus(token, List.of(productId), 1));
         assertEquals(1, ProductFixture.recommendStatus(productId), "设为推荐后 recommand_status=1");
     }
+
+    @Test
+    @DisplayName("批量审核 切换 verify_status(含审核意见)")
+    void batch_verify_status() {
+        assertEquals(1, ProductFixture.verifyStatus(productId), "创建参数 verifyStatus=1");
+
+        assertSuccess(admin.updateVerifyStatus(token, List.of(productId), 0, "驳回:信息不全"));
+        assertEquals(0, ProductFixture.verifyStatus(productId), "驳回后 verify_status=0");
+
+        assertSuccess(admin.updateVerifyStatus(token, List.of(productId), 1, "复审通过"));
+        assertEquals(1, ProductFixture.verifyStatus(productId), "通过后 verify_status=1");
+    }
+
+    @Test
+    @DisplayName("批量软删-恢复 切换 delete_status")
+    void batch_delete_status_soft_delete_and_restore() {
+        assertEquals(0, ProductFixture.deleteStatus(productId), "初始未删除");
+
+        // 软删：仅置 delete_status=1，行仍在（teardown 仍可按 id 物理删除）
+        assertSuccess(admin.updateDeleteStatus(token, List.of(productId), 1));
+        assertEquals(1, ProductFixture.deleteStatus(productId), "软删后 delete_status=1");
+
+        // 恢复
+        assertSuccess(admin.updateDeleteStatus(token, List.of(productId), 0));
+        assertEquals(0, ProductFixture.deleteStatus(productId), "恢复后 delete_status=0");
+    }
 }

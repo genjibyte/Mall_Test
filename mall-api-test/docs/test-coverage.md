@@ -1,6 +1,6 @@
 # 测试覆盖总览
 
-当前 **44 个用例**：默认 `mvn test` 跑 **43（37 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
+当前 **46 个用例**：默认 `mvn test` 跑 **45（39 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
 
 ## 按业务链路
 
@@ -26,7 +26,7 @@
 | | OrderCouponTest | 下单核销 + 取消回退 |
 | **会员中心** | MemberAddressCrudTest | 收货地址 新增-详情-修改-删除 |
 | **商品浏览** | ProductBrowseTest | 首页内容、商品详情、分类树、推荐品牌（公开） |
-| **后台管理** | AdminProductManagementTest | 商品批量上下架/新品/推荐（自隔离：建商品→断言 DB→删除） |
+| **后台管理** | AdminProductManagementTest | 商品批量上下架/新品/推荐/审核/软删恢复（自隔离：建商品→断言 DB→删除） |
 | | AdminOrderManagementTest | 管理员批量关单 status→4（+ R8 关单不退锁库存探针） |
 | **测试基建(H1)** | DataIntegrityTest | 库存完整性守卫：无负锁库存、无超锁(lock>stock)，随套件常驻绿 |
 | | DataMaintenanceTest | 数据卫生维护(@Disabled 手动)：复位负库存 + 硬删软删购物车 |

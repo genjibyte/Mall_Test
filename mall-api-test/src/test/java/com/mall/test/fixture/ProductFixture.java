@@ -49,6 +49,16 @@ public final class ProductFixture {
         return (int) Db.queryLong("SELECT recommand_status FROM pms_product WHERE id = ?", productId);
     }
 
+    /** 审核状态 verify_status（0未审核/1审核通过）。 */
+    public static int verifyStatus(long productId) {
+        return (int) Db.queryLong("SELECT verify_status FROM pms_product WHERE id = ?", productId);
+    }
+
+    /** 删除状态 delete_status（0正常/1已删除）。 */
+    public static int deleteStatus(long productId) {
+        return (int) Db.queryLong("SELECT delete_status FROM pms_product WHERE id = ?", productId);
+    }
+
     /** 删除测试商品（DB）。ES 侧用 SearchClient.deleteById 单独清理。 */
     public static void deleteProduct(long productId) {
         Db.update("DELETE FROM pms_product WHERE id = ?", productId);
