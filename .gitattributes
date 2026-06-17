@@ -1,0 +1,25 @@
+# 统一行尾，消除 Windows 下 LF/CRLF 提交告警与跨平台差异。
+# 仓库内文本默认以 LF 存储；二进制不转换。
+* text=auto eol=lf
+
+*.java       text eol=lf
+*.xml        text eol=lf
+*.yml        text eol=lf
+*.yaml       text eol=lf
+*.md         text eol=lf
+*.properties text eol=lf
+*.sql        text eol=lf
+*.sh         text eol=lf
+
+# Windows 原生脚本保留 CRLF
+*.ps1        text eol=crlf
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+
+# 二进制
+*.jar  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary

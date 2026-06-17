@@ -62,7 +62,7 @@
 ### 🟢 L1–L4（低）
 - env.properties 含本地凭据入库（低敏感；真实环境应走 CI Secrets）。
 - Allure `@Step` 未用，报告步骤可读性可提升。
-- 无 `.gitattributes`，提交时 LF→CRLF 警告频繁（建议统一行尾）。
+- ~~无 `.gitattributes`，提交时 LF→CRLF 警告频繁~~**已加 `.gitattributes` 统一 LF**。
 - 部分用例缺独立 @DisplayName 语义化命名规范化空间。
 
 ## 4. 覆盖缺口（Gaps）
