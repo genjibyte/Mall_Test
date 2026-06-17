@@ -67,6 +67,11 @@ public final class SkuStockFixture {
         Db.update("UPDATE pms_sku_stock SET lock_stock = ? WHERE id = ?", lockStock, skuId);
     }
 
+    /** 直接设置真实库存（缺陷探针 teardown 还原用）。 */
+    public static void setStock(long skuId, int stock) {
+        Db.update("UPDATE pms_sku_stock SET stock = ? WHERE id = ?", stock, skuId);
+    }
+
     public static SkuState read(long skuId) {
         Map<String, Object> row = Db.queryRow(
                 "SELECT stock, lock_stock FROM pms_sku_stock WHERE id = ?", skuId);

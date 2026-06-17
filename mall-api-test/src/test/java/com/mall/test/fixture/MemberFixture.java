@@ -9,9 +9,22 @@ public final class MemberFixture {
 
     private MemberFixture() {}
 
+    /** 第二个会员（用于越权类用例）。种子存在但密码未知，需 makeMemberLoginable 后用 123456 登录。 */
+    public static final String SECOND_MEMBER_USERNAME = "windy";
+
     /** 失效会员信息缓存，使下次 getCurrentMember 读最新 DB（积分用例必需）。 */
     public static void invalidateCache(long memberId) {
         RedisFixture.del(TestConfig.memberCacheKey(memberId));
+    }
+
+    /** 把指定会员的密码改成与 test 相同的哈希，使其可用 123456 登录。返回用户名。幂等。 */
+    public static String makeMemberLoginable(String username) {
+        int n = Db.update(
+                "UPDATE ums_member SET password = " +
+                "(SELECT p FROM (SELECT password p FROM ums_member WHERE username='test') t) " +
+                "WHERE username = ?", username);
+        if (n == 0) throw new IllegalStateException("未找到会员 " + username);
+        return username;
     }
 
     public static long memberId(String username) {
