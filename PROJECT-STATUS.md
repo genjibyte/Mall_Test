@@ -6,7 +6,7 @@
 ## 1. 项目是什么
 
 为微服务电商系统 **mall-swarm**（Spring Cloud Alibaba 2025 / Boot 3.5 / Sa-Token / Java 17）搭建的**接口自动化测试工程**：含设计约束包、测试框架、本地部署。被测源码不入库（Apache-2.0，单独克隆）。
-GitHub：https://github.com/genjibyte/Mall_Test （`main`，24 提交）。
+GitHub：https://github.com/genjibyte/Mall_Test （`main`，25 提交）。
 
 ## 2. 目录结构
 
