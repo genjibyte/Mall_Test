@@ -60,4 +60,10 @@ public class OrderClient {
         return ApiResponse.from(
                 RestClient.givenAuth(token).queryParam("orderId", orderId).post("/mall-portal/order/cancelUserOrder"));
     }
+
+    /** 批量取消超时未付款订单（扫描 create_time 早于 normal_order_overtime 的 status=0 订单）。 */
+    public ApiResponse cancelTimeOutOrder(String token) {
+        return ApiResponse.from(
+                RestClient.givenAuth(token).post("/mall-portal/order/cancelTimeOutOrder"));
+    }
 }

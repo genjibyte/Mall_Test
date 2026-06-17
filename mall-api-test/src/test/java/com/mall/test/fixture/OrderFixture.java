@@ -20,4 +20,9 @@ public final class OrderFixture {
         if (row == null) throw new IllegalStateException("order not found: " + orderId);
         return new BigDecimal(row.get("pay_amount").toString());
     }
+
+    /** 把订单 create_time 回拨指定小时数（模拟超时，配合 cancelTimeOutOrder）。 */
+    public static void backdateCreateTime(long orderId, int hours) {
+        Db.update("UPDATE oms_order SET create_time = DATE_SUB(NOW(), INTERVAL ? HOUR) WHERE id = ?", hours, orderId);
+    }
 }
