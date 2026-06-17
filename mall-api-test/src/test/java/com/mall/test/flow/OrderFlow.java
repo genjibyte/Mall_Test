@@ -16,9 +16,10 @@ public final class OrderFlow {
 
     private OrderFlow() {}
 
-    /** 清空当前会员购物车（用例隔离）。 */
+    /** 清空当前会员购物车（用例隔离，尽力而为）。
+     *  注意：后端 /cart/clear 在无匹配行(空车)时返回 code 500，故此处不断言成功。 */
     public static void clearCart(String token) {
-        assertSuccess(CART.clear(token));
+        CART.clear(token);
     }
 
     /** 把 SKU 加入购物车并返回购物车项 id（即下单用的 cartId）。 */

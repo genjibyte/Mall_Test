@@ -13,13 +13,13 @@
 - **症状**：对同一 `orderId` 调用 `/order/paySuccess` 两次，真实库存被扣两次、`lock_stock` 变负。
 - **根因**：`updateSkuStock` 是纯算术 `stock = stock − qty`，无状态/幂等保护；`paySuccess` 也不校验订单当前 status。
 - **证据**：[OmsPortalOrderServiceImpl.java:253-265](../mall-swarm/mall-portal/src/main/java/com/macro/mall/portal/service/impl/OmsPortalOrderServiceImpl.java) + [PortalOrderDao.xml:50-68](../mall-swarm/mall-portal/src/main/resources/dao/PortalOrderDao.xml)
-- **测试**：下单→paySuccess→再 paySuccess；断言 `stock` 只应净减一次（预期失败＝命中缺陷）。
+- **测试**：`OrderDefectProbeTest.paySuccess_should_be_idempotent`（`@KnownDefect`）。**已实测暴露**：重复支付后 `stock` 净减 2（期望 1）。
 
 ### R2 · `paySuccess` 无归属校验 — 越权支付
 - **症状**：任意登录会员可对**他人** `orderId` 调 paySuccess，将其置为已支付。
 - **根因**：`paySuccess(orderId, payType)` 不校验 `order.member_id == 当前会员`。
 - **证据**：OmsPortalOrderServiceImpl:253（对比 confirmReceiveOrder:340 有归属校验）。
-- **测试**：A 会员 token 支付 B 会员订单；断言应被拒（实际会成功＝缺陷）。
+- **测试**：`OrderDefectProbeTest.paySuccess_should_reject_non_owner`（`@KnownDefect`）。**已实测暴露**：windy 成功支付 test 的订单（code 200）。
 
 ### R3 · 下单非事务 — 中段失败状态残留
 - **症状**：generateOrder 在锁库存/写订单后若某步异常，已产生的副作用不回滚。
@@ -31,13 +31,17 @@
 - **症状**：并发对同一 SKU 下单至库存边界，可能超卖（`stock` 负）。
 - **根因**：`lockStock` 是 Java"读-改-写"非原子；扣减 SQL 无 `stock>=qty` 卫语句、无乐观锁/版本号。
 - **证据**：OmsPortalOrderServiceImpl:727-733；PortalOrderDao.xml 无 where 卫语句。
-- **测试**：N 个并发下单 realStock=N-1 的 SKU，断言成功数 ≤ 库存、不出现负库存。
+- **测试**：`OrderDefectProbeTest.concurrent_orders_should_not_oversell`（`@KnownDefect`）。**已实测暴露**：可用库存 2，5 路并发下单全部成功（超卖）。
 
-### R5 · 取消/超时回滚完整性
-- **症状（待验证项）**：取消后券/积分/库存三者回滚需全部正确。
-- **根因/逻辑**：cancelOrder 同时做 releaseSkuStockLock + updateCouponStatus(0) + 退积分；任一遗漏即缺陷。
+### R5 · 取消/超时回滚完整性（库存/券=正常，积分=缺陷见 R6）
+- **库存**：取消后 `lock_stock` 复原——**已验证正常**（OrderCancelTest / OrderCouponTest）。
+- **券**：取消后 `sms_coupon_history.use_status` 回退 0——**已验证正常**（OrderCouponTest）。
+- **积分**：取消后**不回退**——见 R6（`@KnownDefect`）。
 - **证据**：OmsPortalOrderServiceImpl:297-325 / cancelTimeOutOrder:268-294。
-- **测试**：领券+用积分下单后取消，断言 `sms_coupon_history.use_status=0`、`ums_member.integration` 复原、`lock_stock` 复原。
+
+### R7 · 清空空购物车返回失败（次要）
+- **症状**：对无购物车行的会员调 `/cart/clear` 返回 `code 500 操作失败`（受影响行数为 0 时）。
+- **影响**：测试中清车作为尽力而为清理，框架 `OrderFlow.clearCart` 不对其断言。次要，不影响业务。
 
 ### R6 · 积分下单取消/超时不退还积分（测试中实测发现）
 - **症状**：用积分下单后取消（或超时），积分**不回退**；且 `oms_order.use_integration` 恒为 `NULL`。
@@ -45,7 +49,7 @@
 - **证据**：[OmsPortalOrderServiceImpl.java:224](../mall-swarm/mall-portal/src/main/java/com/macro/mall/portal/service/impl/OmsPortalOrderServiceImpl.java)(insert) vs :236(setUseIntegration)；:320-323(取消退积分判空)。实测 `oms_order.use_integration=NULL`（order 85，pay_amount 99 抵扣已生效，但 use_integration 未落库）。
 - **测试**：`OrderIntegrationTest.cancel_should_refund_used_integration`（`@KnownDefect`，默认跳过）。正确行为（抵扣金额、扣减积分）已作为常驻守护通过。
 
-> 注：R1/R2/R6 在源码层未见专门防护；以"正确电商行为"为预期断言即可暴露。
+> 注：R1/R2/R4/R6 在源码层未见专门防护，均已由 `OrderDefectProbeTest`/`OrderIntegrationTest` 实测暴露（`@KnownDefect` 默认跳过，不阻断门禁）。
 
 ---
 
