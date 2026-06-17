@@ -11,6 +11,12 @@ import java.util.Map;
  */
 public class AdminClient {
 
+    /** 创建商品。body = PmsProductParam(至少 name/productSn；列表字段可空)。返回 data=影响行数。 */
+    public ApiResponse createProduct(String token, Map<String, Object> productParam) {
+        return ApiResponse.from(RestClient.givenAuth(token)
+                .body(productParam).post("/mall-admin/product/create"));
+    }
+
     /** 批量发货（订单 status 1->2）。body = [{orderId,deliveryCompany,deliverySn}]。 */
     public ApiResponse deliver(String token, long orderId, String company, String sn) {
         return ApiResponse.from(RestClient.givenAuth(token)
