@@ -1,6 +1,6 @@
 # 测试覆盖总览
 
-当前 **53 个用例**：默认 `mvn test` 跑 **52（46 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
+当前 **54 个用例**：默认 `mvn test` 跑 **53（47 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
 
 ## 按业务链路
 
@@ -32,6 +32,7 @@
 | | AdminOrderManagementTest | 管理员批量关单 status→4（+ R8 关单不退锁库存探针） |
 | **测试基建(H1)** | DataIntegrityTest | 库存完整性守卫：无负锁库存、无超锁(lock>stock)，随套件常驻绿 |
 | | DataMaintenanceTest | 数据卫生维护(@Disabled 手动)：复位负库存 + 硬删软删购物车 |
+| | IsolatedOrderFlowTest | 专用隔离 SKU 下单→支付：库存增减仅作用于专属 SKU，演示库存隔离 |
 
 ## 缺陷探针（@KnownDefect，按"正确行为"断言，默认跳过）
 

@@ -31,7 +31,8 @@
   - ✅ 新增 `DataHygieneFixture` + `DataIntegrityTest`（常驻绿色守卫：断言无负库存/无超锁，漂移再现即门禁失败）+ `DataMaintenanceTest`（手动复位负库存/清软删购物车）。
   - ✅ 已实跑清理：负库存 4→0、软删购物车 243→0。
   - ✅ 新增覆盖（admin 链路）均采用**自隔离**（自建商品/订单→断言→teardown 复位）。
-- **剩余建议**：① 为高风险用例分配独立会员/商品（替代共享 test）；② Testcontainers 全新库实现完全隔离 + 开并行；③ 滞留未付款订单的释放+关闭纳入维护（当前仅报告）。
+  - ✅ 新增 `IsolatedSkuFixture`（专用无促销大库存 SKU，幂等 ensure+复位）+ `IsolatedOrderFlowTest`，库存敏感的新用例可用专属 SKU 下单，锁定/扣减不再触碰共享目录（库存层隔离已落地）。
+- **剩余建议**：① **会员级隔离**——新建专用 member 承接订单累积（当前订单仍落 test）；② Testcontainers 全新库实现完全隔离 + 开并行；③ 既有库存类用例渐进迁移到 IsolatedSkuFixture；④ 滞留未付款订单的释放+关闭纳入维护（当前仅报告）。
 
 ### 🔴 H2 · 夹具持久修改种子数据且不还原
 - **现象（实测）**：windy/zhengsan/lisi/wangwu/lion 5 个会员密码被改为 test 同哈希；productAdmin 密码、member 积分亦被改。
@@ -64,6 +65,7 @@
 - Allure `@Step` 未用，报告步骤可读性可提升。
 - ~~无 `.gitattributes`，提交时 LF→CRLF 警告频繁~~**已加 `.gitattributes` 统一 LF**。
 - 部分用例缺独立 @DisplayName 语义化命名规范化空间。
+- **observation**：admin `/product/create` 不传 `promotionType` 时落库为 NULL，导致后续购物车促销/下单计算 NPE→HTTP 500（IsolatedSkuFixture 已显式置 0 规避）；属创建入参健壮性缺口，宜后端默认 0。
 
 ## 4. 覆盖缺口（Gaps）
 
