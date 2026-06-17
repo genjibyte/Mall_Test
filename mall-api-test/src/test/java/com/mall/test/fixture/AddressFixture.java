@@ -9,6 +9,12 @@ public final class AddressFixture {
 
     private AddressFixture() {}
 
+    /** 清理某会员名称以 prefix 开头的测试地址（CRUD 用例兜底清理）。 */
+    public static void deleteByNamePrefix(long memberId, String prefix) {
+        Db.update("DELETE FROM ums_member_receive_address WHERE member_id = ? AND name LIKE ?",
+                memberId, prefix + "%");
+    }
+
     /** 返回该会员任一地址 id；没有则插入一条最小地址。 */
     public static long ensureAddress(long memberId) {
         Map<String, Object> row = Db.queryRow(
