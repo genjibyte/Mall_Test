@@ -31,8 +31,8 @@
   - ✅ 新增 `DataHygieneFixture` + `DataIntegrityTest`（常驻绿色守卫：断言无负库存/无超锁，漂移再现即门禁失败）+ `DataMaintenanceTest`（手动复位负库存/清软删购物车）。
   - ✅ 已实跑清理：负库存 4→0、软删购物车 243→0。
   - ✅ 新增覆盖（admin 链路）均采用**自隔离**（自建商品/订单→断言→teardown 复位）。
-  - ✅ 新增 `IsolatedSkuFixture`（专用无促销大库存 SKU，幂等 ensure+复位）+ `IsolatedOrderFlowTest`，库存敏感的新用例可用专属 SKU 下单，锁定/扣减不再触碰共享目录（库存层隔离已落地）。
-- **剩余建议**：① **会员级隔离**——新建专用 member 承接订单累积（当前订单仍落 test）；② Testcontainers 全新库实现完全隔离 + 开并行；③ 既有库存类用例渐进迁移到 IsolatedSkuFixture；④ 滞留未付款订单的释放+关闭纳入维护（当前仅报告）。
+  - ✅ 新增 `IsolatedSkuFixture`（专用无促销大库存 SKU）+ `IsolatedMemberFixture`（克隆 test 哈希建专用会员 isotest-mall，可登录、自带地址）+ `IsolatedOrderFlowTest`：**会员+商品双隔离**下单→支付，库存与订单均不触碰共享种子 test；专用会员订单可由 `DataHygieneFixture.purgeMemberOrders` 整体回收（DataMaintenanceTest 已接入）。
+- **剩余建议**：① 既有库存类用例渐进迁移到 Isolated* 夹具（当前仅证明用例使用）；② Testcontainers 全新库实现完全隔离 + 开并行；③ 滞留未付款订单的释放+关闭纳入维护（当前仅报告）。
 
 ### 🔴 H2 · 夹具持久修改种子数据且不还原
 - **现象（实测）**：windy/zhengsan/lisi/wangwu/lion 5 个会员密码被改为 test 同哈希；productAdmin 密码、member 积分亦被改。

@@ -2,6 +2,7 @@ package com.mall.test.cases.maintenance;
 
 import com.mall.test.config.TestConfig;
 import com.mall.test.fixture.DataHygieneFixture;
+import com.mall.test.fixture.IsolatedMemberFixture;
 import com.mall.test.fixture.MemberFixture;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -49,5 +50,12 @@ class DataMaintenanceTest {
         assertEquals(0, negAfter, "复位后不应再有负锁库存");
         assertEquals(0, overAfter, "不应存在超锁 SKU");
         assertEquals(0, cartAfter, "清理后不应再有软删购物车行");
+
+        // 一次性隔离会员的订单可整体物理清除（不影响共享种子 test）
+        long isoId = IsolatedMemberFixture.ensure();
+        int isoOrders = DataHygieneFixture.orderCount(isoId);
+        int purgedIso = DataHygieneFixture.purgeMemberOrders(isoId);
+        System.out.printf("[hygiene] isolated member(%d): orders=%d purged=%d%n", isoId, isoOrders, purgedIso);
+        assertEquals(0, DataHygieneFixture.orderCount(isoId), "隔离会员订单应被清空");
     }
 }

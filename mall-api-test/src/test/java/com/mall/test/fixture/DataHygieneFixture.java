@@ -41,4 +41,22 @@ public final class DataHygieneFixture {
         return (int) Db.queryLong(
                 "SELECT COUNT(*) FROM oms_order WHERE member_id = ? AND status = 0 AND delete_status = 0", memberId);
     }
+
+    /** 某会员的订单总数（任意状态）。 */
+    public static int orderCount(long memberId) {
+        return (int) Db.queryLong("SELECT COUNT(*) FROM oms_order WHERE member_id = ?", memberId);
+    }
+
+    /**
+     * 物理清除某**一次性测试会员**的全部订单（含明细/操作记录），返回删除订单行数。
+     * 仅用于专用隔离会员，禁止用于共享种子 test(id=1)。
+     */
+    public static int purgeMemberOrders(long memberId) {
+        if (memberId <= 1) {
+            throw new IllegalArgumentException("拒绝清除种子会员订单: memberId=" + memberId);
+        }
+        Db.update("DELETE oi FROM oms_order_item oi JOIN oms_order o ON oi.order_id = o.id WHERE o.member_id = ?", memberId);
+        Db.update("DELETE oh FROM oms_order_operate_history oh JOIN oms_order o ON oh.order_id = o.id WHERE o.member_id = ?", memberId);
+        return Db.update("DELETE FROM oms_order WHERE member_id = ?", memberId);
+    }
 }

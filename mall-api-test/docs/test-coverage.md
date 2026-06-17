@@ -32,7 +32,7 @@
 | | AdminOrderManagementTest | 管理员批量关单 status→4（+ R8 关单不退锁库存探针） |
 | **测试基建(H1)** | DataIntegrityTest | 库存完整性守卫：无负锁库存、无超锁(lock>stock)，随套件常驻绿 |
 | | DataMaintenanceTest | 数据卫生维护(@Disabled 手动)：复位负库存 + 硬删软删购物车 |
-| | IsolatedOrderFlowTest | 专用隔离 SKU 下单→支付：库存增减仅作用于专属 SKU，演示库存隔离 |
+| | IsolatedOrderFlowTest | 专用会员+专用SKU 下单→支付：库存与订单均不触碰共享种子，演示双隔离 |
 
 ## 缺陷探针（@KnownDefect，按"正确行为"断言，默认跳过）
 
