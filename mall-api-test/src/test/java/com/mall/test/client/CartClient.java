@@ -29,10 +29,28 @@ public class CartClient {
                 RestClient.givenAuth(token).body(body).post("/mall-portal/cart/add"));
     }
 
+    /** 当前会员购物车列表（含 id/productSkuId/quantity）。 */
+    public ApiResponse list(String token) {
+        return ApiResponse.from(RestClient.givenAuth(token).get("/mall-portal/cart/list"));
+    }
+
     /** 当前会员含促销的购物车列表（用于取 cartId / realStock / reduceAmount）。 */
     public ApiResponse listPromotion(String token) {
         return ApiResponse.from(
                 RestClient.givenAuth(token).get("/mall-portal/cart/list/promotion"));
+    }
+
+    /** 修改购物车项数量。 */
+    public ApiResponse updateQuantity(String token, long cartItemId, int quantity) {
+        return ApiResponse.from(RestClient.givenAuth(token)
+                .queryParam("id", cartItemId).queryParam("quantity", quantity)
+                .get("/mall-portal/cart/update/quantity"));
+    }
+
+    /** 删除购物车中的商品（按购物车项 id 列表）。 */
+    public ApiResponse deleteItems(String token, java.util.List<Long> ids) {
+        return ApiResponse.from(RestClient.givenAuth(token)
+                .queryParam("ids", ids).post("/mall-portal/cart/delete"));
     }
 
     /** 清空购物车（用例隔离用）。 */
