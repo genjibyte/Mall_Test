@@ -31,6 +31,19 @@ public final class CouponFixture {
         return new TestCoupon(couponId, historyId, amount);
     }
 
+    /** 创建一张可领取的全场券（per_limit=1, enable_time 已到），**不**预置领取记录，供 /member/coupon/add 领取。 */
+    public static TestCoupon createUniversalCouponForClaim(BigDecimal amount) {
+        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+        Timestamp future = Timestamp.valueOf(LocalDateTime.now().plusYears(5));
+        Timestamp past = Timestamp.valueOf(LocalDateTime.now().minusDays(1));
+        long couponId = Db.insertReturnId(
+                "INSERT INTO sms_coupon(type,name,platform,count,amount,per_limit,min_point,start_time,end_time," +
+                "use_type,note,publish_count,use_count,receive_count,enable_time,member_level) " +
+                "VALUES(0,'TEST-CLAIM-COUPON',0,999,?,1,0.00,?,?,0,'auto claim test',999,0,0,?,0)",
+                amount, now, future, past);
+        return new TestCoupon(couponId, 0, amount);
+    }
+
     /** 该券领取记录的使用状态：0未用/1已用。 */
     public static int historyUseStatus(long couponId, long memberId) {
         return (int) Db.queryLong(

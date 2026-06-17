@@ -2,6 +2,7 @@ package com.mall.test.cases.auth;
 
 import com.mall.test.auth.TokenFactory;
 import com.mall.test.client.AdminClient;
+import com.mall.test.client.AuthClient;
 import com.mall.test.client.MemberClient;
 import com.mall.test.config.TestConfig;
 import com.mall.test.core.ApiResponse;
@@ -52,6 +53,13 @@ class AuthGuardTest {
     void member_token_on_admin_returns_401() {
         // 会员 token 不被 StpUtil 识别 -> 401（非 403），验证双账号隔离
         assertCode(admin.info(TokenFactory.memberToken()), ResultCode.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("错误密码登录失败")
+    void wrong_password_login_fails() {
+        ApiResponse r = new AuthClient().loginMember(TestConfig.memberUsername(), "wrong-password");
+        assertCode(r, ResultCode.FAILED);
     }
 
     @Test
