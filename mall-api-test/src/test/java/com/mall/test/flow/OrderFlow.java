@@ -2,8 +2,11 @@ package com.mall.test.flow;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.mall.test.client.CartClient;
+import com.mall.test.client.OrderClient;
 import com.mall.test.core.ApiResponse;
 import com.mall.test.fixture.SkuStockFixture.OrderableSku;
+
+import java.util.List;
 
 import static com.mall.test.core.ApiAssertions.assertSuccess;
 
@@ -13,6 +16,7 @@ import static com.mall.test.core.ApiAssertions.assertSuccess;
 public final class OrderFlow {
 
     private static final CartClient CART = new CartClient();
+    private static final OrderClient ORDER = new OrderClient();
 
     private OrderFlow() {}
 
@@ -20,6 +24,19 @@ public final class OrderFlow {
      *  注意：后端 /cart/clear 在无匹配行(空车)时返回 code 500，故此处不断言成功。 */
     public static void clearCart(String token) {
         CART.clear(token);
+    }
+
+    /**
+     * 加购并下单（无券/积分、payType=1）：清车 → 加购 → generateOrder，断言成功后返回下单响应。
+     * 调用方从返回体取 {@code dataLong("order","id")} 或校验 order.payAmount/status。
+     * 消除各下单用例重复的"清车→加购→下单→断言"样板。
+     */
+    public static ApiResponse placeOrder(String token, long addressId, OrderableSku sku, int qty) {
+        clearCart(token);
+        long cartId = addToCart(token, sku, qty);
+        ApiResponse gen = ORDER.generateOrder(token, addressId, 1, List.of(cartId));
+        assertSuccess(gen);
+        return gen;
     }
 
     /** 把 SKU 加入购物车并返回购物车项 id（即下单用的 cartId）。 */

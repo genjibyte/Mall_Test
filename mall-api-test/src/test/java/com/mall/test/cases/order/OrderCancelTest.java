@@ -13,8 +13,6 @@ import io.qameta.allure.Feature;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
 import static com.mall.test.core.ApiAssertions.assertSuccess;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -37,12 +35,8 @@ class OrderCancelTest {
         SkuStockFixture.OrderableSku sku = SkuStockFixture.findOrderableNoPromo(qty);
         SkuStockFixture.SkuState before = SkuStockFixture.read(sku.skuId());
 
-        OrderFlow.clearCart(token);
-        long cartId = OrderFlow.addToCart(token, sku, qty);
-
         // 下单：lock_stock += qty，status=0
-        ApiResponse gen = order.generateOrder(token, addressId, 1, List.of(cartId));
-        assertSuccess(gen);
+        ApiResponse gen = OrderFlow.placeOrder(token, addressId, sku, qty);
         long orderId = gen.dataLong("order", "id");
         SkuStockFixture.SkuState afterOrder = SkuStockFixture.read(sku.skuId());
         assertEquals(before.lockStock() + qty, afterOrder.lockStock(), "下单应锁定库存");

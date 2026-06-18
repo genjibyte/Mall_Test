@@ -4,7 +4,6 @@ import com.mall.test.auth.TokenFactory;
 import com.mall.test.client.AdminClient;
 import com.mall.test.client.OrderClient;
 import com.mall.test.config.TestConfig;
-import com.mall.test.core.ApiResponse;
 import com.mall.test.fixture.MemberFixture;
 import com.mall.test.fixture.OrderFixture;
 import com.mall.test.fixture.SkuStockFixture;
@@ -14,8 +13,6 @@ import io.qameta.allure.Feature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static com.mall.test.core.ApiAssertions.assertSuccess;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,11 +52,7 @@ class OrderLifecycleTest {
         skuId = sku.skuId();
         before = SkuStockFixture.read(skuId);
 
-        OrderFlow.clearCart(memberToken);
-        long cartId = OrderFlow.addToCart(memberToken, sku, 1);
-        ApiResponse gen = order.generateOrder(memberToken, addressId, 1, List.of(cartId));
-        assertSuccess(gen);
-        long orderId = gen.dataLong("order", "id");
+        long orderId = OrderFlow.placeOrder(memberToken, addressId, sku, 1).dataLong("order", "id");
         assertEquals(0, OrderFixture.status(orderId), "下单后待付款(0)");
 
         assertSuccess(order.paySuccess(memberToken, orderId, 1));

@@ -11,6 +11,7 @@ import com.mall.test.flow.OrderFlow;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +34,20 @@ class OrderHappyPathTest {
 
     private final OrderClient order = new OrderClient();
 
+    private Long skuId;
+    private SkuStockFixture.SkuState before;
+
+    @AfterEach
+    void restoreStock() {
+        // happy path 走完整支付（扣减真实库存且业务上不可回退），用 DB 快照还原保证可重复、不漂移。
+        if (skuId != null && before != null) {
+            SkuStockFixture.setStock(skuId, before.stock());
+            SkuStockFixture.setLockStock(skuId, before.lockStock());
+        }
+        skuId = null;
+        before = null;
+    }
+
     @Test
     @DisplayName("P0 会员下单到支付 金额库存状态全链路正确")
     void member_order_to_pay_happyPath() {
@@ -42,7 +57,8 @@ class OrderHappyPathTest {
         long addressId = MemberFixture.defaultAddressId(memberId);
 
         SkuStockFixture.OrderableSku sku = SkuStockFixture.findOrderableNoPromo(qty);
-        SkuStockFixture.SkuState before = SkuStockFixture.read(sku.skuId());
+        skuId = sku.skuId();
+        before = SkuStockFixture.read(sku.skuId());
         BigDecimal expectedPay = sku.price().multiply(BigDecimal.valueOf(qty));
 
         // 0-2. 隔离 + 加购，取 cartId

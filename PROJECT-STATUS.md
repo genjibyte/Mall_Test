@@ -2,11 +2,12 @@
 
 > 单文件交接：读完即可恢复上下文并继续。最后更新 2026-06-17。
 > 详细约束见 [context-pack/](context-pack/)，覆盖矩阵见 [mall-api-test/docs/test-coverage.md](mall-api-test/docs/test-coverage.md)，审计见 [mall-api-test/docs/audit.md](mall-api-test/docs/audit.md)。
+> **下单主链路深度样板**：[mall-api-test/docs/order-chain-exemplar.md](mall-api-test/docs/order-chain-exemplar.md)。
 
 ## 1. 项目是什么
 
 为微服务电商系统 **mall-swarm**（Spring Cloud Alibaba 2025 / Boot 3.5 / Sa-Token / Java 17）搭建的**接口自动化测试工程**：含设计约束包、测试框架、本地部署。被测源码不入库（Apache-2.0，单独克隆）。
-GitHub：https://github.com/genjibyte/Mall_Test （`main`，27 提交）。
+GitHub：https://github.com/genjibyte/Mall_Test （`main`，28 提交）。
 
 ## 2. 目录结构
 

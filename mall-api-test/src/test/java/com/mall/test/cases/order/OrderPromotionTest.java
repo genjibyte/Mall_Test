@@ -15,10 +15,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import static com.mall.test.core.ApiAssertions.assertAmountEquals;
-import static com.mall.test.core.ApiAssertions.assertSuccess;
 
 /**
  * P1 · 促销金额：单品促销 / 满减 / 阶梯，断言订单 payAmount 与 DB 促销配置算得的预期一致。
@@ -47,8 +45,7 @@ class OrderPromotionTest {
         final int qty = 1;
         SkuStockFixture.OrderableSku sku = SkuStockFixture.findOrderableByPromotionType(1, qty);
         BigDecimal expected = PromotionFixture.singlePayAmount(sku.skuId(), qty);
-        orderId = placeOrder(sku, qty);
-        assertOrderPay(expected);
+        orderId = placeAndAssertPay(sku, qty, expected);
     }
 
     @Test
@@ -57,8 +54,7 @@ class OrderPromotionTest {
         final int qty = 1; // 单行 qty=1 规避满减分摊的除法舍入
         SkuStockFixture.OrderableSku sku = SkuStockFixture.findOrderableByPromotionType(4, qty);
         BigDecimal expected = PromotionFixture.fullReductionPayAmount(sku.productId(), sku.price(), qty);
-        orderId = placeOrder(sku, qty);
-        assertOrderPay(expected);
+        orderId = placeAndAssertPay(sku, qty, expected);
     }
 
     @Test
@@ -67,25 +63,16 @@ class OrderPromotionTest {
         final int qty = 2; // 阶梯最低档 count=2
         SkuStockFixture.OrderableSku sku = SkuStockFixture.findOrderableByPromotionType(3, qty);
         BigDecimal expected = PromotionFixture.ladderPayAmount(sku.productId(), sku.price(), qty);
-        orderId = placeOrder(sku, qty);
-        assertOrderPay(expected);
+        orderId = placeAndAssertPay(sku, qty, expected);
     }
 
     // --- helpers ---
 
-    private long placeOrder(SkuStockFixture.OrderableSku sku, int qty) {
+    /** 加购下单（经 OrderFlow.placeOrder）并断言订单应付==expected，返回 orderId 供 teardown 取消。 */
+    private long placeAndAssertPay(SkuStockFixture.OrderableSku sku, int qty, BigDecimal expected) {
         long addressId = MemberFixture.defaultAddressId(memberId);
-        OrderFlow.clearCart(token);
-        long cartId = OrderFlow.addToCart(token, sku, qty);
-        ApiResponse gen = order.generateOrder(token, addressId, 1, List.of(cartId));
-        assertSuccess(gen);
-        lastGen = gen;
+        ApiResponse gen = OrderFlow.placeOrder(token, addressId, sku, qty);
+        assertAmountEquals(expected, gen.dataDecimal("order", "payAmount"), "促销后应付");
         return gen.dataLong("order", "id");
-    }
-
-    private ApiResponse lastGen;
-
-    private void assertOrderPay(BigDecimal expected) {
-        assertAmountEquals(expected, lastGen.dataDecimal("order", "payAmount"), "促销后应付");
     }
 }

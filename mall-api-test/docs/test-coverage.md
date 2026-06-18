@@ -1,5 +1,7 @@
 # 测试覆盖总览
 
+> 下单主链路的**深度样板**（业务流/oracle 来源/缺陷/可复现设计/怎么跑）见 [order-chain-exemplar.md](order-chain-exemplar.md)。
+
 当前 **54 个用例**：默认 `mvn test` 跑 **53（47 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
 
 ## 按业务链路
