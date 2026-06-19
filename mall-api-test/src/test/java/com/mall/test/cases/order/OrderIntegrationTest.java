@@ -11,6 +11,9 @@ import com.mall.test.fixture.SkuStockFixture;
 import com.mall.test.flow.OrderFlow;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @Epic("下单主链路")
 @Feature("积分抵扣与回滚")
+@Owner("mall-qa")
+@Severity(SeverityLevel.CRITICAL)
 class OrderIntegrationTest {
 
     private final OrderClient order = new OrderClient();

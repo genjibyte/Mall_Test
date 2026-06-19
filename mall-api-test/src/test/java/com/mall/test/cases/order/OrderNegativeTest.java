@@ -9,6 +9,9 @@ import com.mall.test.fixture.SkuStockFixture;
 import com.mall.test.flow.OrderFlow;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +27,8 @@ import static com.mall.test.core.ApiAssertions.assertFailedWithMessage;
  */
 @Epic("下单主链路")
 @Feature("下单负例")
+@Owner("mall-qa")
+@Severity(SeverityLevel.NORMAL)
 class OrderNegativeTest {
 
     private final OrderClient order = new OrderClient();
