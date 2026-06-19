@@ -2,7 +2,7 @@
 
 > 下单主链路的**深度样板**（业务流/oracle 来源/缺陷/可复现设计/怎么跑）见 [order-chain-exemplar.md](order-chain-exemplar.md)。
 
-当前 **54 个用例**：默认 `mvn test` 跑 **53（47 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
+当前 **60 个用例**：默认 `mvn test` 跑 **59（53 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
 
 ## 按业务链路
 
@@ -11,6 +11,7 @@
 | **#1 下单主链路** | OrderHappyPathTest | 加购→确认单→下单→支付：金额/库存(锁定·扣减·释放)/状态 |
 | | OrderNegativeTest | 缺收货地址、库存不足（守门校验文案） |
 | | OrderDiscountNegativeTest | 券门槛未达"优惠券不可用"、积分低于单位"积分不可用" |
+| | OrderDiscountBoundaryTest | **边界/等价类**(@ParameterizedTest)：积分围绕 use_unit=100(50/99拒·100/200受)、券门槛 >/= 订单额 |
 | | OrderCancelTest | 取消未付款：status=4 + 锁库存复原 |
 | | OrderCouponTest | 全场券抵扣(=price-面额) + 取消券回退未使用 |
 | | OrderIntegrationTest | 100积分抵1元 + 扣减积分（+ R6 取消退积分缺陷探针） |

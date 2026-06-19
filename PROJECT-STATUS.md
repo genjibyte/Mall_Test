@@ -14,7 +14,7 @@ GitHub：https://github.com/genjibyte/Mall_Test （`main`，28 提交）。
 | 目录 | 内容 |
 |---|---|
 | `context-pack/` | 设计/约束包 9 维（目标/边界/代码/业务/运行环境/质量门禁/badcase/交接/CICD设计）|
-| `mall-api-test/` | 测试框架（Java+JUnit5+RestAssured+Allure），54 用例（默认 53 + 1 @slow MQ）|
+| `mall-api-test/` | 测试框架（Java+JUnit5+RestAssured+Allure），60 用例（默认 59 + 1 @slow MQ）|
 | `deploy/` | 隔离端口基础设施 compose + 服务启停脚本 |
 | `mall-swarm/` | 被测系统克隆（gitignore，不入库）|
 
@@ -23,7 +23,7 @@ GitHub：https://github.com/genjibyte/Mall_Test （`main`，28 提交）。
 1. **架构分析**：5 模块职责、服务依赖、Sa-Token 双账号鉴权、下单链路源码级研究。
 2. **本地部署**：6 容器(MySQL/Redis/Nacos/RabbitMQ/ES/Mongo)隔离端口 + 5 服务 dev 运行，全链路验证通过。
 3. **设计**：context-pack 9 文件 + CI/CD 设计预案（未实施）。
-4. **测试框架**：分层 client/flow/fixture/core/cases；**54 用例（默认 53：47 通过 + 6 跳过；另 1 @slow MQ）** 覆盖 5 核心链路 + 浏览/会员/购物车 + 跨服务 + 后台管理(商品批量状态/审核/软删/订单关闭) + 退货售后(申请→确认/拒绝) + 搜索综合筛选排序 + 测试基建(库存完整性守卫 + 专用隔离SKU下单) + MQ 真实延迟。
+4. **测试框架**：分层 client/flow/fixture/core/cases；**60 用例（默认 59：53 通过 + 6 跳过；另 1 @slow MQ）** 覆盖 5 核心链路 + 浏览/会员/购物车 + 跨服务 + 后台管理(商品批量状态/审核/软删/订单关闭) + 退货售后(申请→确认/拒绝) + 搜索综合筛选排序 + 测试基建(库存完整性守卫 + 专用隔离SKU下单) + MQ 真实延迟 + 折扣边界/等价类。**企业化**:Allure 环境/分类/Severity/Owner/Issue 可追溯 + 测试规范 + README 门面。
 5. **缺陷发现**：R1 非幂等支付、R2 越权支付、R4 并发超卖、**R6 积分不退**、**R8 管理员关单不退锁库存(库存泄漏)**——均为 @KnownDefect 探针；另 R3 非事务、R7 空车clear500 已记录。
 6. **H1 数据漂移治理**：DataHygieneFixture + DataIntegrityTest(常驻守卫) + DataMaintenanceTest(手动)；已清理负库存 4→0、软删购物车 243→0。**会员+商品双隔离**(IsolatedMemberFixture+IsolatedSkuFixture)落地,隔离会员订单可整体回收;剩既有用例迁移 + Testcontainers/并行。
 7. **M3 MQ 真实延迟超时**：OrderTimeoutMqTest(@Tag slow，默认排除、`-Pslow` 跑)，真实 TTL队列→DLX→CancelOrderReceiver，实跑 ~60s 通过；RabbitFixture 清队列解决按消息 TTL 队头阻塞。
@@ -52,7 +52,7 @@ cd mall-swarm && mvn clean install -DskipTests -Ddocker.skip=true && cd ..
 powershell -File deploy/run-services.ps1
 # 3. 健康自检 + 跑测试
 curl -s http://localhost:18848/nacos/v1/ns/catalog/services   # 5 服务健康
-cd mall-api-test && mvn test                                   # 默认 53 用例全绿(6 跳过；slow 排除)
+cd mall-api-test && mvn test                                   # 默认 59 用例全绿(6 跳过；slow 排除)
 # mvn test -Pslow                                              # 含 MQ 真实延迟用例(约 60s，夜间/全量)
 ```
 
