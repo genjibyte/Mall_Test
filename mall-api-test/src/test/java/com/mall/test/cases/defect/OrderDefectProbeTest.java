@@ -11,6 +11,10 @@ import com.mall.test.fixture.SkuStockFixture;
 import com.mall.test.flow.OrderFlow;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import io.qameta.allure.Issue;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Epic("缺陷探针")
 @Feature("订单支付缺陷")
+@Owner("mall-qa")
+@Severity(SeverityLevel.CRITICAL)
 class OrderDefectProbeTest {
 
     private final OrderClient order = new OrderClient();
@@ -40,6 +46,7 @@ class OrderDefectProbeTest {
     private final long memberId = MemberFixture.memberId(TestConfig.memberUsername());
 
     @KnownDefect("R1: paySuccess 非幂等，重复支付重复扣库存（updateSkuStock 纯算术、无状态判定）")
+    @Issue("R1")
     @Test
     @DisplayName("R1 paySuccess应幂等 重复支付只扣一次库存")
     void paySuccess_should_be_idempotent() {
@@ -61,6 +68,7 @@ class OrderDefectProbeTest {
     }
 
     @KnownDefect("R2: paySuccess 无归属校验，任意会员可支付他人订单")
+    @Issue("R2")
     @Test
     @DisplayName("R2 不能支付他人订单")
     void paySuccess_should_reject_non_owner() {
@@ -84,6 +92,7 @@ class OrderDefectProbeTest {
     }
 
     @KnownDefect("R4: 并发下单无库存原子校验，超卖（lockStock 读改写、扣减 SQL 无卫语句、无乐观锁）")
+    @Issue("R4")
     @Test
     @DisplayName("R4 并发下单不应超卖")
     void concurrent_orders_should_not_oversell() throws Exception {

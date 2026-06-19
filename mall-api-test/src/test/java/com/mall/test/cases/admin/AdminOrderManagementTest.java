@@ -12,6 +12,10 @@ import com.mall.test.fixture.SkuStockFixture;
 import com.mall.test.flow.OrderFlow;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
+import io.qameta.allure.Issue;
+import io.qameta.allure.Owner;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @Epic("后台管理链路")
 @Feature("订单关闭与状态")
+@Owner("mall-qa")
+@Severity(SeverityLevel.CRITICAL)
 class AdminOrderManagementTest {
 
     private final OrderClient order = new OrderClient();
@@ -70,6 +76,7 @@ class AdminOrderManagementTest {
     }
 
     @KnownDefect("R8: 管理员批量关单只置 status=4，不释放 lock_stock（与用户取消/超时不一致），造成库存泄漏")
+    @Issue("R8")
     @Test
     @DisplayName("管理员关单应释放锁定库存(R8 缺陷探针)")
     void admin_close_should_release_locked_stock() {

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "已知缺陷 KnownDefect (验证后默认跳过)",
+    "matchedStatuses": ["skipped"],
+    "messageRegex": ".*KnownDefect.*"
+  },
+  {
+    "name": "数据维护/手动用例 (默认禁用)",
+    "matchedStatuses": ["skipped"],
+    "messageRegex": ".*maintenance.*"
+  },
+  {
+    "name": "产品缺陷 - 断言失败 (Product defect)",
+    "matchedStatuses": ["failed"]
+  },
+  {
+    "name": "测试/环境错误 - 用例中断 (Test infra / broken)",
+    "matchedStatuses": ["broken"]
+  }
+]
