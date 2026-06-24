@@ -56,7 +56,9 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
 
   elasticsearch:
-    image: elasticsearch:7.17.3
+    # 7.17.18(而非 SUT 默认 7.17.3)：自带 JDK 已修 cgroup v2 的 CgroupV2Subsystem NPE，
+    # 否则 WSL2 cgroup v2 下 ES 崩溃。仅测试环境补丁版差异，搜索语义不变。见 PROJECT-STATUS §5。
+    image: elasticsearch:7.17.18
     container_name: mall-elasticsearch
     restart: unless-stopped
     environment:
