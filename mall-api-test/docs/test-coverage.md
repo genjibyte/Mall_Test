@@ -2,7 +2,7 @@
 
 > 下单主链路的**深度样板**（业务流/oracle 来源/缺陷/可复现设计/怎么跑）见 [order-chain-exemplar.md](order-chain-exemplar.md)。
 
-当前 **60 个用例**：默认 `mvn test` 跑 **59（53 通过 + 6 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
+当前 **63 个用例**：默认 `mvn test` 跑 **62（53 通过 + 9 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护 + 3 @Disabled 中间件混沌）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
 
 ## 按业务链路
 
@@ -36,6 +36,7 @@
 | **测试基建(H1)** | DataIntegrityTest | 库存完整性守卫：无负锁库存、无超锁(lock>stock)，随套件常驻绿 |
 | | DataMaintenanceTest | 数据卫生维护(@Disabled 手动)：复位负库存 + 硬删软删购物车 |
 | | IsolatedOrderFlowTest | 专用会员+专用SKU 下单→支付：库存与订单均不触碰共享种子，演示双隔离 |
+| **中间件韧性** | MiddlewareResilienceTest `@chaos` | 故障注入(docker stop)：ES宕→搜索降级+前台隔离、MQ宕→下单失败无孤儿、Redis宕→鉴权降级；teardown 强制恢复(手动跑) |
 
 ## 缺陷探针（@KnownDefect，按"正确行为"断言，默认跳过）
 
@@ -63,6 +64,7 @@
 mvn test                                  # 全部(缺陷探针/维护自动跳过)
 mvn -Dtest=OrderDefectProbeTest test      # 仅缺陷探针(会失败=暴露缺陷)
 mvn -Dtest=DataMaintenanceTest "-Djunit.jupiter.conditions.deactivate=*" test  # 手动清理共享数据漂移(H1)
+mvn -Dtest=MiddlewareResilienceTest "-Djunit.jupiter.conditions.deactivate=*" test  # 中间件故障注入(会 docker stop, 手动)
 mvn test -Pslow                           # 含 @slow MQ 真实延迟超时用例(约 60s，夜间/全量)
 allure serve target/allure-results        # 报告
 ```

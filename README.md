@@ -6,7 +6,7 @@
 
 ## 亮点
 
-- **60 个用例**：默认 `mvn test` 跑 59（53 通过 + 6 跳过）+ 1 个 `@Tag("slow")` MQ 真实延迟用例（`-Pslow`）。企业级 Allure 报告（环境/分类/Severity/Owner/Issue 可追溯）。
+- **63 个用例**：默认 `mvn test` 跑 62（53 通过 + 9 跳过：缺陷探针/数据维护/中间件混沌）+ 1 个 `@Tag("slow")` MQ 真实延迟用例（`-Pslow`）。企业级 Allure 报告（环境/分类/Severity/Owner/Issue 可追溯）。
 - **5 大链路 + 扩展**：下单主链路、认证&RBAC、超时取消、商品搜索、优惠券营销 + 后台管理 / 退货售后 / 搜索筛选 / 跨服务端到端。
 - **证据驱动 oracle**：促销/金额预期复刻源码算法从 DB 配置现算，**非魔法数**；副作用直连 MySQL 灰盒复核。
 - **缺陷发现并固化**：R1 非幂等支付、R2 越权支付、R4 并发超卖、R6 积分不退、R8 关单不退锁库存 —— 以 `@KnownDefect` 探针按"正确行为"断言、验证后默认跳过、不阻断门禁，并 `@Issue` 可追溯。
@@ -35,7 +35,7 @@ powershell -File deploy/run-services.ps1            # 5 服务注册 Nacos
 
 # 3. 跑接口测试 + 报告
 cd mall-api-test
-mvn test                          # 默认 59 用例（slow 排除）
+mvn test                          # 默认 62 用例（slow 排除；混沌/维护手动）
 mvn test -Pslow                   # 含 MQ 真实延迟（约 60s）
 allure serve target/allure-results
 ```

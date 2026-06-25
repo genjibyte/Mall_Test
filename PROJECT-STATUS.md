@@ -14,7 +14,7 @@ GitHub：https://github.com/genjibyte/Mall_Test （`main`，28 提交）。
 | 目录 | 内容 |
 |---|---|
 | `context-pack/` | 设计/约束包 9 维（目标/边界/代码/业务/运行环境/质量门禁/badcase/交接/CICD设计）|
-| `mall-api-test/` | 测试框架（Java+JUnit5+RestAssured+Allure），60 用例（默认 59 + 1 @slow MQ）|
+| `mall-api-test/` | 测试框架（Java+JUnit5+RestAssured+Allure），63 用例（默认 62:53绿+9跳[含3混沌] + 1 @slow MQ）|
 | `deploy/` | 隔离端口基础设施 compose + 服务启停脚本 |
 | `mall-swarm/` | 被测系统克隆（gitignore，不入库）|
 
@@ -52,7 +52,7 @@ cd mall-swarm && mvn clean install -DskipTests -Ddocker.skip=true && cd ..
 powershell -File deploy/run-services.ps1
 # 3. 健康自检 + 跑测试
 curl -s http://localhost:18848/nacos/v1/ns/catalog/services   # 5 服务健康
-cd mall-api-test && mvn test                                   # 默认 59 用例全绿(6 跳过；slow 排除)
+cd mall-api-test && mvn test                                   # 默认 62 用例全绿(9 跳过；slow 排除)
 # mvn test -Pslow                                              # 含 MQ 真实延迟用例(约 60s，夜间/全量)
 ```
 
