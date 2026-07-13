@@ -22,4 +22,10 @@ public final class RedisFixture {
             return jedis.get(key);
         }
     }
+
+    public static long ttl(String key) {
+        try (Jedis jedis = new Jedis(TestConfig.redisHost(), TestConfig.redisPort())) {
+            return jedis.ttl(key);
+        }
+    }
 }

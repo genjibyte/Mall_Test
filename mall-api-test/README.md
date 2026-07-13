@@ -41,6 +41,14 @@ mvn -Dtest=OrderHappyPathTest test   # 跑单个
 
 Allure 报告：结果在 `target/allure-results`，`allure serve target/allure-results` 查看。
 
+工程收口门禁：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/run-quality-gate.ps1
+```
+
+该脚本会执行 Maven 测试并生成 `target/quality-metrics.json` 与 `target/quality-summary.md`，用于本地交接、PR 摘要或未来 CI 归档。完整说明见 [docs/engineering-closure.md](docs/engineering-closure.md)。
+
 ## P0 用例覆盖（OrderHappyPathTest）
 
 会员 加购 → 确认单 → 下单 → 支付，断言：

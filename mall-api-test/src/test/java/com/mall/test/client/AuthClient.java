@@ -28,4 +28,42 @@ public class AuthClient {
                         .formParam("password", password)
                         .post("/mall-portal/sso/login"));
     }
+
+    public ApiResponse getMemberAuthCode(String telephone) {
+        return ApiResponse.from(
+                RestClient.given()
+                        .queryParam("telephone", telephone)
+                        .get("/mall-portal/sso/getAuthCode"));
+    }
+
+    public ApiResponse registerMember(String username, String password, String telephone, String authCode) {
+        return ApiResponse.from(
+                RestClient.given()
+                        .contentType(ContentType.URLENC)
+                        .formParam("username", username)
+                        .formParam("password", password)
+                        .formParam("telephone", telephone)
+                        .formParam("authCode", authCode)
+                        .post("/mall-portal/sso/register"));
+    }
+
+    public ApiResponse updateMemberPassword(String telephone, String password, String authCode) {
+        return ApiResponse.from(
+                RestClient.given()
+                        .contentType(ContentType.URLENC)
+                        .formParam("telephone", telephone)
+                        .formParam("password", password)
+                        .formParam("authCode", authCode)
+                        .post("/mall-portal/sso/updatePassword"));
+    }
+
+    public ApiResponse updateMemberPassword(String token, String telephone, String password, String authCode) {
+        return ApiResponse.from(
+                RestClient.givenAuth(token)
+                        .contentType(ContentType.URLENC)
+                        .formParam("telephone", telephone)
+                        .formParam("password", password)
+                        .formParam("authCode", authCode)
+                        .post("/mall-portal/sso/updatePassword"));
+    }
 }

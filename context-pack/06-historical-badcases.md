@@ -49,7 +49,18 @@
 - **证据**：[OmsPortalOrderServiceImpl.java:224](../mall-swarm/mall-portal/src/main/java/com/macro/mall/portal/service/impl/OmsPortalOrderServiceImpl.java)(insert) vs :236(setUseIntegration)；:320-323(取消退积分判空)。实测 `oms_order.use_integration=NULL`（order 85，pay_amount 99 抵扣已生效，但 use_integration 未落库）。
 - **测试**：`OrderIntegrationTest.cancel_should_refund_used_integration`（`@KnownDefect`，默认跳过）。正确行为（抵扣金额、扣减积分）已作为常驻守护通过。
 
-> 注：R1/R2/R4/R6 在源码层未见专门防护，均已由 `OrderDefectProbeTest`/`OrderIntegrationTest` 实测暴露（`@KnownDefect` 默认跳过，不阻断门禁）。
+### R8 · 管理员关单不释放锁库存（测试中实测发现）
+- **症状**：后台 `/order/update/close` 将未付款订单置为关闭，但不释放 `pms_sku_stock.lock_stock`。
+- **根因**：后台关单只更新订单状态，与会员取消/超时取消路径不一致，缺少释放锁库存副作用。
+- **测试**：`AdminOrderManagementTest.admin_close_should_release_locked_stock`（`@KnownDefect`，默认跳过）。
+
+### R9 · 优惠券并发领取超发（测试中实测发现）
+- **症状**：发行数量为 1 的优惠券在 12 路并发领取下出现 2 次成功领取。
+- **根因**：`UmsMemberCouponServiceImpl.add` 先查 `coupon.count` 再插入领取历史，最后用 `coupon.setCount(coupon.getCount()-1)` 全量更新；无事务隔离、无 `count > 0` 条件扣减、无乐观锁，典型读改写竞态。
+- **证据**：[UmsMemberCouponServiceImpl.java:42-79](../mall-swarm/mall-portal/src/main/java/com/macro/mall/portal/service/impl/UmsMemberCouponServiceImpl.java)。
+- **测试**：`CouponLifecycleAdminApiTest.concurrent_claim_should_not_over_issue_coupon`（`@KnownDefect`，默认跳过）。**已实测暴露**：总量 1，12 并发中成功 2 次。
+
+> 注：R1/R2/R4/R6/R8/R9 在源码层未见专门防护，均已由测试探针实测暴露（`@KnownDefect` 默认跳过，不阻断门禁）。
 
 ---
 

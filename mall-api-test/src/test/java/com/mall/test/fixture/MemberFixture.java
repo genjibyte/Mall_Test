@@ -2,6 +2,8 @@ package com.mall.test.fixture;
 
 import com.mall.test.config.TestConfig;
 
+import java.util.Map;
+
 /**
  * 会员相关夹具：id、默认收货地址、积分、缓存失效。
  */
@@ -29,6 +31,27 @@ public final class MemberFixture {
 
     public static long memberId(String username) {
         return Db.queryLong("SELECT id FROM ums_member WHERE username = ?", username);
+    }
+
+    public static boolean existsByUsername(String username) {
+        return Db.queryLong("SELECT COUNT(*) FROM ums_member WHERE username = ?", username) > 0;
+    }
+
+    public static boolean existsByPhone(String phone) {
+        return Db.queryLong("SELECT COUNT(*) FROM ums_member WHERE phone = ?", phone) > 0;
+    }
+
+    public static Long memberIdOrNull(String username) {
+        Map<String, Object> row = Db.queryRow("SELECT id FROM ums_member WHERE username = ?", username);
+        return row == null ? null : ((Number) row.get("id")).longValue();
+    }
+
+    /** 删除自动化注册会员。仅允许删除指定前缀，避免误伤种子会员。 */
+    public static int deleteAutoMembersByUsernamePrefix(String usernamePrefix) {
+        if (usernamePrefix == null || !usernamePrefix.startsWith("autoreg_")) {
+            throw new IllegalArgumentException("拒绝删除非自动化注册会员前缀: " + usernamePrefix);
+        }
+        return Db.update("DELETE FROM ums_member WHERE username LIKE ?", usernamePrefix + "%");
     }
 
     /** 默认收货地址 id（优先 default_status=1）。 */

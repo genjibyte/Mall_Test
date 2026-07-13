@@ -2,7 +2,7 @@
 
 > 下单主链路的**深度样板**（业务流/oracle 来源/缺陷/可复现设计/怎么跑）见 [order-chain-exemplar.md](order-chain-exemplar.md)。
 
-当前 **63 个用例**：默认 `mvn test` 跑 **62（53 通过 + 9 跳过：5 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护 + 3 @Disabled 中间件混沌）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
+当前 **70 个用例**：默认 `mvn test` 跑 **69（59 通过 + 10 跳过：6 @KnownDefect 缺陷探针 + 1 @Disabled 数据维护 + 3 @Disabled 中间件混沌）**，全绿、不阻断门禁；另有 **1 个 `@Tag("slow")` MQ 真实延迟超时用例**默认排除，`mvn test -Pslow` 全量跑（约 60s）。
 
 ## 按业务链路
 
@@ -27,9 +27,11 @@
 | | SearchFilterSortTest | 综合搜索：按品牌/分类筛选(全命中)、价格升/降序(单调)——属性型断言 |
 | | AdminProductSearchTest | 跨服务：管理员建商品 → ES 可搜（端到端） |
 | **#5 优惠券营销** | MemberCouponTest | 领取(/member/coupon/add) + per_limit 重复领取被拒 |
+| | CouponLifecycleAdminApiTest | 后台 API 创建券 → 会员领取；总量领完拒绝、未来 enable_time 提前领取拒绝；R9 并发领取超发探针 |
 | | OrderCouponTest | 下单核销 + 取消回退 |
 | **退货售后** | OrderReturnApplyTest | 会员申请→后台确认(0→1)/拒绝(0→3)/非法状态 no-op(自隔离) |
 | **会员中心** | MemberAddressCrudTest | 收货地址 新增-详情-修改-删除 |
+| | MemberRegistrationAuthTest | 验证码写 Redis、错码拒绝、注册成功+重复拒绝、改密后旧密码失效新密码可登 |
 | **商品浏览** | ProductBrowseTest | 首页内容、商品详情、分类树、推荐品牌（公开） |
 | **后台管理** | AdminProductManagementTest | 商品批量上下架/新品/推荐/审核/软删恢复（自隔离：建商品→断言 DB→删除） |
 | | AdminOrderManagementTest | 管理员批量关单 status→4（+ R8 关单不退锁库存探针） |
@@ -47,6 +49,7 @@
 | R4 | 并发下单超卖（无原子库存校验） | OrderDefectProbeTest.concurrent_orders_should_not_oversell | 库存2，5并发全成功 |
 | R6 | 积分下单取消不退积分(use_integration 未持久化) | OrderIntegrationTest.cancel_should_refund_used_integration | 取消后积分未回退 |
 | R8 | 管理员关单不释放 lock_stock（与用户取消/超时不一致 → 库存泄漏） | AdminOrderManagementTest.admin_close_should_release_locked_stock | 关单后 lock_stock 未复原(实测 1→应 0) |
+| R9 | 优惠券并发领取超发（count 读改写非原子） | CouponLifecycleAdminApiTest.concurrent_claim_should_not_over_issue_coupon | 发行数量1，12并发成功2次 |
 
 > R3（下单非事务）、R7（空车 clear 返回500，次要）见 [context-pack/06](../../context-pack/06-historical-badcases.md)，暂未做探针。
 

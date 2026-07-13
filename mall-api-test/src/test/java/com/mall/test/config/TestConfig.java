@@ -58,6 +58,11 @@ public final class TestConfig {
         return get("redis.member-key-prefix") + ":" + memberId;
     }
 
+    /** mall-portal 会员验证码 Redis key：<prefix>:<telephone>。 */
+    public static String authCodeCacheKey(String telephone) {
+        return getOrDefault("redis.auth-code-key-prefix", "mall-swarm:ums:authCode") + ":" + telephone;
+    }
+
     // RabbitMQ 管理端（用于 MQ 延迟超时用例清队列），默认即本地部署值，可经 env 覆盖。
     public static String rabbitMgmtUrl()  { return getOrDefault("rabbit.mgmt-url", "http://localhost:15673"); }
     public static String rabbitUsername() { return getOrDefault("rabbit.username", "mall"); }

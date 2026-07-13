@@ -3,6 +3,9 @@ package com.mall.test.fixture;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * 优惠券夹具。种子券多已过期，这里直插一张「全场通用(useType=0)、未来有效、min_point=0」的券，
@@ -14,6 +17,53 @@ public final class CouponFixture {
     private CouponFixture() {}
 
     public record TestCoupon(long couponId, long historyId, BigDecimal amount) {}
+
+    public record ManagedCoupon(long couponId, String name, BigDecimal amount) {}
+
+    /** 后台 API 创建全场可领取券所需的最小 body。Date 用 epoch millis，避免本地时区/格式解析差异。 */
+    public static Map<String, Object> universalCouponParam(
+            String name, BigDecimal amount, int publishCount, int perLimit, LocalDateTime enableTime) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("type", 0);
+        body.put("name", name);
+        body.put("platform", 0);
+        body.put("amount", amount);
+        body.put("perLimit", perLimit);
+        body.put("minPoint", new BigDecimal("0.00"));
+        body.put("startTime", millis(LocalDateTime.now().minusDays(1)));
+        body.put("endTime", millis(LocalDateTime.now().plusYears(1)));
+        body.put("useType", 0);
+        body.put("note", "admin api auto coupon");
+        body.put("publishCount", publishCount);
+        body.put("enableTime", millis(enableTime));
+        body.put("memberLevel", 0);
+        body.put("productRelationList", java.util.List.of());
+        body.put("productCategoryRelationList", java.util.List.of());
+        return body;
+    }
+
+    public static long couponIdByName(String name) {
+        return Db.queryLong("SELECT id FROM sms_coupon WHERE name = ? ORDER BY id DESC LIMIT 1", name);
+    }
+
+    public static int count(long couponId) {
+        return (int) Db.queryLong("SELECT count FROM sms_coupon WHERE id = ?", couponId);
+    }
+
+    public static int receiveCount(long couponId) {
+        return (int) Db.queryLong("SELECT receive_count FROM sms_coupon WHERE id = ?", couponId);
+    }
+
+    public static int historyCount(long couponId) {
+        return (int) Db.queryLong("SELECT COUNT(*) FROM sms_coupon_history WHERE coupon_id = ?", couponId);
+    }
+
+    public static void deleteManagedCoupon(long couponId) {
+        Db.update("DELETE FROM sms_coupon_history WHERE coupon_id=?", couponId);
+        Db.update("DELETE FROM sms_coupon_product_relation WHERE coupon_id=?", couponId);
+        Db.update("DELETE FROM sms_coupon_product_category_relation WHERE coupon_id=?", couponId);
+        Db.update("DELETE FROM sms_coupon WHERE id=?", couponId);
+    }
 
     /** 创建一张面额 amount、门槛 0 的全场通用券并发给会员（未使用）。 */
     public static TestCoupon createUsableUniversalCoupon(long memberId, BigDecimal amount) {
@@ -59,5 +109,9 @@ public final class CouponFixture {
     public static void delete(TestCoupon c) {
         Db.update("DELETE FROM sms_coupon_history WHERE coupon_id=?", c.couponId());
         Db.update("DELETE FROM sms_coupon WHERE id=?", c.couponId());
+    }
+
+    private static long millis(LocalDateTime time) {
+        return time.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 }
