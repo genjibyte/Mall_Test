@@ -16,12 +16,13 @@
 
 | 阶段 | 优先级 | 目标 | 主要产出 | 完成标准 |
 |---|---:|---|---|---|
-| S1 质量门禁增强 | P0 | 让每次测试运行可汇总、可追踪、可接 CI | `run-quality-gate.ps1`、`quality-history.jsonl` | **已落地**：每次运行追加一条历史记录，包含 commit、suite、耗时、结果 |
+| S1 质量门禁增强 | P0 | 让每次测试运行可汇总、可追踪、可接 CI | `run-quality-gate.ps1`、`quality-history.jsonl` | **已落地**：每次运行追加一条历史记录，包含 runId、ciBuildId、commit、suite、耗时、结果、KnownDefect 编号 |
 | S2 会员注册认证 | P0 | 覆盖 Redis 验证码、注册防重、改密登录态 | `MemberRegistrationAuthTest`、`AuthClient` 扩展、会员清理夹具 | **已落地**：单类可独立运行，写入数据可清理 |
 | S3 营销券生命周期 | P1 | 用 admin API 造券，验证限量、时间窗、并发领取 | `AdminCouponClient`、`CouponLifecycleAdminApiTest`、券生命周期用例 | **已落地**：admin API 造券、总量、enable_time 已覆盖；并发领取以 R9 缺陷探针固化 |
 | S4 RBAC 配置动态生效 | P1 | 验证授权配置到网关鉴权的闭环 | 角色/资源 client、权限缓存刷新用例 | 能证明 403/200 随配置变化 |
-| S5 秒杀展示闭环 | P2 | 只验证后台配置与首页展示，不做假下单并发 | `AdminFlashClient`、`FlashPromotionFixture`、首页展示用例 | 当前时间窗内外展示行为可复现 |
-| S6 CI 落地 | P2 | 把本地门禁脚本接入流水线 | CI job、构件归档、Allure 报告 | CI 归档质量指标和 Allure results |
+| S5 审计链路收口 | P1 | 串起风险、用例、运行、证据、缺陷、提交 | `audit-chain-design.md`、门禁指标字段、缺陷登记规范 | 新增链路能从风险追到证据和 commit |
+| S6 秒杀展示闭环 | P2 | 只验证后台配置与首页展示，不做假下单并发 | `AdminFlashClient`、`FlashPromotionFixture`、首页展示用例 | 当前时间窗内外展示行为可复现 |
+| S7 CI 落地 | P2 | 把本地门禁脚本接入流水线 | CI job、构件归档、Allure 报告 | CI 归档质量指标和 Allure results |
 
 ## 3. 当前优先级
 
@@ -29,7 +30,7 @@
 
 1. **质量门禁增强**
    - 追加 `target/quality-history.jsonl`。
-   - 每条历史包含 `gitCommit`、`gitBranch`、`runStartedAt`、`runFinishedAt`、`suite`、`testFilter`、`durationSeconds`、`total/passed/failures/errors/skipped`。
+   - 每条历史包含 `runId`、`ciBuildId`、`gitCommit`、`gitBranch`、`runStartedAt`、`runFinishedAt`、`suite`、`testFilter`、`durationSeconds`、`total/passed/failures/errors/skipped`、`knownDefectIds`。
    - 未来 CI 或平台只读这个文件即可做趋势。
 
 2. **会员注册与认证安全**
@@ -50,6 +51,12 @@
 2. **RBAC 配置动态生效**
    - 不重复“看到 403”本身。
    - 只测“配置变化 -> 缓存刷新 -> 鉴权结果变化”的闭环。
+
+3. **审计链路收口**
+   - 新增链路必须说明 risk、case、data strategy、evidence、result、commit。
+   - 缺陷探针必须进入 `06-historical-badcases.md` 和 `test-coverage.md`。
+   - 质量门禁历史必须能回答“哪次运行、哪个 CI 构建、哪个提交、哪些用例、哪些跳过、哪些缺陷”。
+   - 详细设计见 [audit-chain-design.md](audit-chain-design.md)。
 
 ### P2：谨慎做
 
@@ -85,6 +92,7 @@
 5. 写入数据有清理策略。
 6. 本地能用 `mvn -Dtest=<TestClass> test` 单独运行。
 7. `tools/run-quality-gate.ps1 -Test <TestClass>` 能生成质量指标。
+8. 能在审计链路中追到风险来源、运行证据、缺陷编号或提交记录。
 
 ## 6. 与平台的关系
 

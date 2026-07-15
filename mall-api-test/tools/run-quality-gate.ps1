@@ -6,7 +6,9 @@ param(
 
     [switch]$SkipRun,
 
-    [string]$Maven = "mvn"
+    [string]$Maven = "mvn",
+
+    [string]$CiBuildId = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -58,6 +60,115 @@ function Get-GitValue {
     return ""
 }
 
+function Get-FirstNonBlank {
+    param([string[]]$Values)
+
+    foreach ($value in $Values) {
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            return "$value".Trim()
+        }
+    }
+
+    return ""
+}
+
+function Get-CiBuildId {
+    param([string]$ExplicitCiBuildId)
+
+    return Get-FirstNonBlank -Values @(
+        $ExplicitCiBuildId,
+        $env:CI_BUILD_ID,
+        $env:GITHUB_RUN_ID,
+        $env:BUILD_BUILDID,
+        $env:BUILD_ID,
+        $env:BUILD_NUMBER
+    )
+}
+
+function New-RunId {
+    param(
+        [datetime]$StartedAt,
+        [string]$SuiteName,
+        [string]$GitCommit
+    )
+
+    $shortSha = "nogit"
+    if (-not [string]::IsNullOrWhiteSpace($GitCommit)) {
+        $shortSha = $GitCommit
+        if ($shortSha.Length -gt 7) {
+            $shortSha = $shortSha.Substring(0, 7)
+        }
+    }
+
+    return "$($StartedAt.ToString("yyyyMMddTHHmmss"))-$SuiteName-$shortSha"
+}
+
+function Get-KnownDefectIndex {
+    param([string]$SourceDir)
+
+    $index = @{}
+    if (-not (Test-Path -LiteralPath $SourceDir)) {
+        return $index
+    }
+
+    $sourceFiles = Get-ChildItem -LiteralPath $SourceDir -Recurse -Filter "*.java" -File
+    foreach ($file in $sourceFiles) {
+        $content = Get-Content -LiteralPath $file.FullName -Encoding UTF8 -Raw
+        $packageName = ""
+        $packageMatch = [regex]::Match($content, "(?m)^\s*package\s+([^;]+);")
+        if ($packageMatch.Success) {
+            $packageName = $packageMatch.Groups[1].Value.Trim()
+        }
+
+        $className = [System.IO.Path]::GetFileNameWithoutExtension($file.Name)
+        $fullClassName = if ([string]::IsNullOrWhiteSpace($packageName)) {
+            $className
+        } else {
+            "$packageName.$className"
+        }
+
+        $pendingKnownDefect = ""
+        $pendingIssue = ""
+        foreach ($line in ($content -split "\r?\n")) {
+            $knownMatch = [regex]::Match($line, '@KnownDefect\("([^"]*)"')
+            if ($knownMatch.Success) {
+                $pendingKnownDefect = $knownMatch.Groups[1].Value
+            }
+
+            $issueMatch = [regex]::Match($line, '@Issue\("([^"]+)"\)')
+            if ($issueMatch.Success) {
+                $pendingIssue = $issueMatch.Groups[1].Value
+            }
+
+            if ([string]::IsNullOrWhiteSpace($pendingKnownDefect)) {
+                continue
+            }
+
+            $methodMatch = [regex]::Match($line, "^\s*(?:public|protected|private)?\s*(?:static\s+)?(?:void|[\w<>\[\]]+)\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*\(")
+            if ($methodMatch.Success) {
+                $defectId = ""
+                $idMatch = [regex]::Match($pendingKnownDefect, "R\d+")
+                if ($idMatch.Success) {
+                    $defectId = $idMatch.Value
+                } elseif (-not [string]::IsNullOrWhiteSpace($pendingIssue)) {
+                    $defectId = $pendingIssue
+                }
+
+                $index["$fullClassName#$($methodMatch.Groups["name"].Value)"] = [ordered]@{
+                    defectId = $defectId
+                    issueId = $pendingIssue
+                    message = $pendingKnownDefect
+                }
+
+                $pendingKnownDefect = ""
+                $pendingIssue = ""
+            }
+        }
+    }
+
+    return $index
+}
+
 Push-Location $projectDir
 try {
     New-DirectoryIfMissing $targetDir
@@ -84,6 +195,11 @@ try {
 
     $finishedAt = Get-Date
     $durationSeconds = [Math]::Round(($finishedAt - $startedAt).TotalSeconds, 3)
+    $gitCommit = Get-GitValue @("rev-parse", "HEAD")
+    $gitBranch = Get-GitValue @("rev-parse", "--abbrev-ref", "HEAD")
+    $runId = New-RunId -StartedAt $startedAt -SuiteName $Suite -GitCommit $gitCommit
+    $resolvedCiBuildId = Get-CiBuildId -ExplicitCiBuildId $CiBuildId
+    $knownDefectIndex = Get-KnownDefectIndex -SourceDir (Join-Path $projectDir "src\test\java")
 
     $reportFiles = @()
     if (Test-Path -LiteralPath $reportsDir) {
@@ -98,6 +214,8 @@ try {
     $classes = New-Object System.Collections.Generic.HashSet[string]
     $failedCases = New-Object System.Collections.Generic.List[object]
     $skippedCases = New-Object System.Collections.Generic.List[object]
+    $knownDefectCases = New-Object System.Collections.Generic.List[object]
+    $knownDefectIds = @{}
     $parseErrors = New-Object System.Collections.Generic.List[object]
     $suiteTimeSeconds = 0.0
 
@@ -144,6 +262,33 @@ try {
                 $skipMessage = Get-SkippedMessage $case
                 if ($skipMessage -match "KnownDefect") {
                     $knownDefectSkipped++
+                    $caseKey = "$($case.classname)#$($case.name)"
+                    $defectId = ""
+                    $issueId = ""
+                    $defectMessage = ""
+                    if ($knownDefectIndex.ContainsKey($caseKey)) {
+                        $defectMeta = $knownDefectIndex[$caseKey]
+                        $defectId = "$($defectMeta.defectId)"
+                        $issueId = "$($defectMeta.issueId)"
+                        $defectMessage = "$($defectMeta.message)"
+                    }
+                    if ([string]::IsNullOrWhiteSpace($defectId)) {
+                        $idMatch = [regex]::Match($skipMessage, "R\d+")
+                        if ($idMatch.Success) {
+                            $defectId = $idMatch.Value
+                        }
+                    }
+                    if (-not [string]::IsNullOrWhiteSpace($defectId)) {
+                        $knownDefectIds[$defectId] = $true
+                    }
+                    $knownDefectCases.Add([ordered]@{
+                        class = "$($case.classname)"
+                        name = "$($case.name)"
+                        defectId = $defectId
+                        issueId = $issueId
+                        message = $defectMessage
+                        skippedMessage = $skipMessage
+                    }) | Out-Null
                 }
                 $skippedCases.Add([ordered]@{
                     class = "$($case.classname)"
@@ -163,16 +308,19 @@ try {
     if ($mavenExitCode -ne 0 -or $failures -gt 0 -or $errorCount -gt 0 -or $reportFiles.Count -eq 0 -or $parseErrors.Count -gt 0) {
         $status = "FAIL"
     }
+    $knownDefectIdList = @($knownDefectIds.Keys) | Sort-Object
 
     $metrics = [ordered]@{}
     $metrics.Add("status", $status)
+    $metrics.Add("runId", $runId)
     $metrics.Add("suite", $Suite)
     $metrics.Add("testFilter", $Test)
+    $metrics.Add("ciBuildId", $resolvedCiBuildId)
     $metrics.Add("generatedAt", (Get-Date).ToString("s"))
     $metrics.Add("runStartedAt", $startedAt.ToString("s"))
     $metrics.Add("runFinishedAt", $finishedAt.ToString("s"))
-    $metrics.Add("gitCommit", (Get-GitValue @("rev-parse", "HEAD")))
-    $metrics.Add("gitBranch", (Get-GitValue @("rev-parse", "--abbrev-ref", "HEAD")))
+    $metrics.Add("gitCommit", $gitCommit)
+    $metrics.Add("gitBranch", $gitBranch)
     $metrics.Add("projectDir", $projectDir)
     $metrics.Add("mavenExitCode", $mavenExitCode)
     $metrics.Add("durationSeconds", $durationSeconds)
@@ -185,18 +333,20 @@ try {
     $metrics.Add("errors", $errorCount)
     $metrics.Add("skipped", $skipped)
     $metrics.Add("knownDefectSkipped", $knownDefectSkipped)
+    $metrics.Add("knownDefectIds", [object[]]$knownDefectIdList)
     $metrics.Add("parseErrors", [object[]]$parseErrors.ToArray())
     $metrics.Add("failedCases", [object[]]$failedCases.ToArray())
     $metrics.Add("skippedCases", [object[]]$skippedCases.ToArray())
+    $metrics.Add("knownDefectCases", [object[]]$knownDefectCases.ToArray())
 
     $metrics | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $metricsPath -Encoding UTF8
 
     $history = [ordered]@{}
     foreach ($key in @(
-        "status", "suite", "testFilter", "generatedAt", "runStartedAt", "runFinishedAt",
+        "status", "runId", "suite", "testFilter", "ciBuildId", "generatedAt", "runStartedAt", "runFinishedAt",
         "gitCommit", "gitBranch", "mavenExitCode", "durationSeconds", "surefireTimeSeconds",
         "reportFileCount", "classCount", "total", "passed", "failures", "errors", "skipped",
-        "knownDefectSkipped"
+        "knownDefectSkipped", "knownDefectIds"
     )) {
         $history.Add($key, $metrics[$key])
     }
@@ -214,14 +364,28 @@ try {
         ($parseErrors | ForEach-Object { "- $($_.file): $($_.message)" }) -join "`n"
     }
 
+    $knownDefectIdSummary = if ($knownDefectIdList.Count -eq 0) {
+        ""
+    } else {
+        $knownDefectIdList -join ", "
+    }
+
+    $knownDefectLines = if ($knownDefectCases.Count -eq 0) {
+        "- None"
+    } else {
+        ($knownDefectCases | ForEach-Object { "- $($_.defectId) $($_.class).$($_.name): $($_.message)" }) -join "`n"
+    }
+
     $summary = @"
 # Mall API Test Quality Summary
 
 | Metric | Value |
 |---|---:|
 | Status | $status |
+| Run ID | $runId |
 | Suite | $Suite |
 | Test filter | $Test |
+| CI build ID | $resolvedCiBuildId |
 | Git commit | $($metrics["gitCommit"]) |
 | Git branch | $($metrics["gitBranch"]) |
 | Run started at | $($metrics["runStartedAt"]) |
@@ -237,6 +401,7 @@ try {
 | Errors | $errorCount |
 | Skipped | $skipped |
 | Known defect skipped | $knownDefectSkipped |
+| Known defect IDs | $knownDefectIdSummary |
 | Parse errors | $($parseErrors.Count) |
 
 ## Failed Cases
@@ -246,6 +411,10 @@ $failedLines
 ## Parse Errors
 
 $parseErrorLines
+
+## Known Defect Cases
+
+$knownDefectLines
 
 ## Artifacts
 

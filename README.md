@@ -47,6 +47,7 @@ allure serve target/allure-results
 |---|---|
 | [docs/test-system-design.md](mall-api-test/docs/test-system-design.md) | **测试工程体系设计**：大厂维度全景 × 现状 × 目标 + 重点探索(数据隔离/并发/微服务/中间件/效能) + **STAR 叙事库** |
 | [docs/engineering-closure.md](mall-api-test/docs/engineering-closure.md) | **工程收口入口**：能解释 / 能复现 / 能度量 / 能落地，含质量门禁脚本与指标口径 |
+| [docs/audit-chain-design.md](mall-api-test/docs/audit-chain-design.md) | **审计链路设计**：风险 → 用例 → 运行 → 证据 → 缺陷 → 提交的追溯闭环 |
 | [docs/test-roadmap.md](mall-api-test/docs/test-roadmap.md) | **后续链路路线图**：去重驱动 + 风险分类 + 7 条样板链路提案 |
 | [docs/order-chain-exemplar.md](mall-api-test/docs/order-chain-exemplar.md) | **下单主链路深度样板**：业务流 / oracle 来源 / 缺陷 / 可复现设计 / 怎么跑 |
 | [docs/test-conventions.md](mall-api-test/docs/test-conventions.md) | **测试规范**：分层 / 命名 / 断言契约 / 数据策略 / 缺陷协议 / Severity / 门禁 |

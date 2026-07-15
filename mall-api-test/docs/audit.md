@@ -1,24 +1,24 @@
 # 框架 / 代码 / 设计 审计报告
 
-> 初次审计 2026-06-17；**企业化收口更新 2026-06-19**。范围：mall-api-test 框架代码、测试设计、context-pack 设计。
-> 方法：通读源码 + 对实环境核查数据状态。结论先行：**企业级、可交付的接口测试框架**——分层清晰、证据驱动、缺陷可追溯、报告工程化、数据可复现；原最大技术债 H1(数据漂移)已治理(守卫+维护+双隔离)；**全 60 用例 live 全绿闭环**(曾因 WSL cgroup v2 阻塞搜索，已升 ES 7.17.18 解决)。
+> 初次审计 2026-06-17；**企业化收口更新 2026-07-16**。范围：mall-api-test 框架代码、测试设计、context-pack 设计。
+> 方法：通读源码 + 对实环境核查数据状态。结论先行：**企业级、可交付的接口测试框架**——分层清晰、证据驱动、缺陷可追溯、报告工程化、数据可复现；原最大技术债 H1(数据漂移)已治理(守卫+维护+双隔离)；默认 fast 门禁 **69 用例全绿闭环**（59 通过 + 10 跳过，其中 6 个 @KnownDefect）。
 
 ## 1. 概览
 
 | 指标 | 值 |
 |---|---|
-| 框架文件 / 行数 | 62 Java / ~3811 行 |
+| 框架文件 / 行数 | 67 Java / 持续增长 |
 | 分层 | config / core / auth / client / fixture / flow / cases / support |
-| 测试 | 28 类 · **63 用例**：默认 62（53 通过 + 9 跳过[5 @KnownDefect + 1 数据维护 + 3 中间件混沌]）+ 1 `@Tag(slow)` MQ 默认排除 |
-| 业务链路 | 5 核心链路 + 浏览/会员/购物车 + 后台管理 + 退货售后 + 搜索筛选 + 跨服务 + 测试基建 |
-| 提交 | 38+ 次（全程 mvn test 全绿；**全 60 用例 live 全绿**，含搜索 9 用例，ES 已升 7.17.18 解 cgroup v2）|
+| 测试 | 29 类 · **70 用例**：默认 69（59 通过 + 10 跳过[6 @KnownDefect + 1 数据维护 + 3 中间件混沌]）+ 1 `@Tag(slow)` MQ 默认排除 |
+| 业务链路 | 5 核心链路 + 浏览/会员注册认证/购物车 + 后台管理 + 退货售后 + 搜索筛选 + 跨服务 + 优惠券生命周期 + 测试基建 |
+| 提交 | 39+ 次（默认 fast 门禁全绿；质量指标经 `run-quality-gate.ps1` 输出 JSON/Markdown/JSONL，含 runId/ciBuildId/knownDefectIds）|
 
 ## 2. 优点（Strengths）
 
 - **设计分层清晰**：client(接口)/flow(编排)/fixture(数据)/core(断言基础设施)/cases，职责单一、复用度高。
 - **断言契约正确**：统一 `body.code` 优先、金额 BigDecimal.compareTo，副作用直连 DB 复核——符合 context-pack/05 QG1。
 - **证据驱动**：促销/金额预期复刻源码算法从 DB 配置计算，非魔法数；判定口径均经实测取证。
-- **缺陷协议成熟**：5 个 @KnownDefect 探针（R1/R2/R4/R6/R8）按"正确行为"断言、验证后默认跳过、不阻断门禁、并 `@Issue` 可追溯；其中 **R6/R8 为测试中新发现的真实缺陷**。
+- **缺陷协议成熟**：6 个 @KnownDefect 探针（R1/R2/R4/R6/R8/R9）按"正确行为"断言、验证后默认跳过、不阻断门禁；门禁产物会列出 `knownDefectIds/knownDefectCases`，其中 **R6/R8/R9 为测试中新发现的真实缺陷**。
 - **能力完整**：双 token、DB+Redis 夹具、Awaitility 异步、并发超卖探测、跨服务端到端、真实 MQ 延迟超时(@slow)。
 - **企业级工程化（2026-06-19）**：① Allure 报告地基（environment/categories/Severity/Owner/Story/Issue 可追溯，会话监听器自动注入）；② 测试设计严谨度（折扣边界/等价类 @ParameterizedTest 数据驱动）；③ 可复现（三种数据策略 + 双隔离夹具 + 库存完整性常驻守卫 + 维护回收）。
 - **文档齐全**：context-pack(9 维) + 下单链路深度样板(order-chain-exemplar) + 测试规范(test-conventions) + test-coverage + 审计 + CI/CD 设计 + README 工程门面。

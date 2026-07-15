@@ -1,7 +1,7 @@
 # 测试规范（Test Conventions）· 企业级标准
 
 > 这套规范定义"在本工程里如何写一条接口测试"。新增任何用例都应遵循它。
-> 配套：下单链路样板 [order-chain-exemplar.md](order-chain-exemplar.md)、覆盖总览 [test-coverage.md](test-coverage.md)、审计 [audit.md](audit.md)。
+> 配套：下单链路样板 [order-chain-exemplar.md](order-chain-exemplar.md)、覆盖总览 [test-coverage.md](test-coverage.md)、审计 [audit.md](audit.md)、审计链路 [audit-chain-design.md](audit-chain-design.md)。
 
 ## 1. 分层架构（职责单一、由内向外依赖）
 
@@ -24,6 +24,7 @@
 - 测试方法：`snake_case` 表达断言（`cancel_unpaid_order_restores_lock_stock`）；JUnit `ReplaceUnderscores` 生成可读名。
 - `@DisplayName`：一句中文，**含预期**（"取消未付款订单 状态置关闭 锁定库存复原"）。
 - Allure 维度：`@Epic`(链路) → `@Feature`(子域) → `@Story`(场景)。
+- 审计链路：新增链路在类注释、fixture 注释或设计文档中说明风险编号、数据策略和证据来源；运行证据由 `run-quality-gate.ps1` 的 `runId` 串起。
 
 ## 3. 断言契约（QG1，不可违反）
 
@@ -80,3 +81,4 @@
 5. [ ] 选一种数据策略并在 `@AfterEach` 兑现（或用隔离夹具）。
 6. [ ] 已知缺陷：`@KnownDefect` + `@Issue`；慢用例：`@Tag("slow")`。
 7. [ ] 本地 `mvn -Dtest=<NewTest> test` 绿；不破坏 `DataIntegrityTest`。
+8. [ ] 审计链路能串起 `risk -> case -> data strategy -> runId -> evidence -> result -> commit`。

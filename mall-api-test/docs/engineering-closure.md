@@ -10,6 +10,7 @@
 | 能复现 | 换一台机器/换一个人，怎么恢复环境并稳定跑？ | `deploy/`、`PROJECT-STATUS.md`、数据守卫/维护用例 | 固定恢复路径 + 运行前后检查清单 |
 | 能度量 | 不是“感觉全绿”，而是能输出什么指标？ | Surefire XML、Allure results、`@KnownDefect` 协议 | `tools/run-quality-gate.ps1` 生成 JSON/Markdown 指标 |
 | 能落地 | 本地、交接、未来 CI 怎么接？ | `context-pack/08-cicd-design.md`、Maven profiles | 质量门禁命令 + 分级执行策略 |
+| 能审计 | 为什么测、证据在哪、对应哪个提交？ | Allure、Surefire、缺陷目录、Git history | [audit-chain-design.md](audit-chain-design.md) |
 
 ## 2. 能解释
 
@@ -95,6 +96,7 @@ powershell -ExecutionPolicy Bypass -File tools/run-quality-gate.ps1
 |---|---|
 | `target/quality-metrics.json` | 机器可读指标，后续 CI/看板可直接消费 |
 | `target/quality-summary.md` | 人可读摘要，可贴到交接、PR、日报 |
+| `target/quality-history.jsonl` | 每次门禁追加一行，形成可审计趋势 |
 | `target/surefire-reports/` | JUnit 原始报告 |
 | `target/allure-results/` | Allure 原始报告 |
 
@@ -102,11 +104,15 @@ powershell -ExecutionPolicy Bypass -File tools/run-quality-gate.ps1
 
 | 指标 | 口径 |
 |---|---|
+| runId | 单次运行标识，格式为 `<timestamp>-<suite>-<shortSha>` |
+| ciBuildId | CI 构建号；可通过 `-CiBuildId` 或常见 CI 环境变量注入 |
 | total | Surefire XML 中测试用例总数 |
 | passed | `total - failures - errors - skipped` |
 | failures/errors | JUnit 断言失败/运行错误 |
 | skipped | `@Disabled`、已知缺陷、维护/混沌等跳过 |
 | knownDefectSkipped | skipped 中 message 含 `KnownDefect` 的数量 |
+| knownDefectIds | 本次门禁携带的缺陷编号，例如 R1/R2/R4/R6/R8/R9 |
+| knownDefectCases | 缺陷编号对应的 class/method 和 `@KnownDefect` 说明 |
 | durationSeconds | 脚本端到端执行耗时 |
 | mavenExitCode | Maven 进程退出码，门禁最终依据之一 |
 
@@ -117,6 +123,7 @@ powershell -ExecutionPolicy Bypass -File tools/run-quality-gate.ps1
 | 本地日常/PR 快线 | `tools/run-quality-gate.ps1` | Maven exit code 为 0，failures/errors 为 0 |
 | 夜间全量 | `tools/run-quality-gate.ps1 -Suite slow` | 包含 slow，允许耗时更长，仍要求 failures/errors 为 0 |
 | 单类定位 | `tools/run-quality-gate.ps1 -Test OrderHappyPathTest` | 只看目标类是否通过 |
+| CI 快线 | `tools/run-quality-gate.ps1 -CiBuildId <build-id>` | 运行结果可回连到 CI 构建 |
 | 仅汇总已有结果 | `tools/run-quality-gate.ps1 -SkipRun` | 不跑 Maven，只解析现有 Surefire 报告 |
 
 ## 5. 能落地
@@ -166,4 +173,5 @@ mall-api-test/target/allure-results/
 - [x] 有机器可读 `quality-metrics.json`。
 - [x] 有人可读 `quality-summary.md`。
 - [x] README 能指向收口文档和门禁脚本。
+- [x] 有审计链路设计，串起风险、用例、运行、证据、缺陷、提交。
 - [ ] CI 真正启用：仍按 `context-pack/08-cicd-design.md` 作为下一阶段，不在本次强行激活。

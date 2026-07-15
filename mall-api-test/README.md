@@ -45,9 +45,11 @@ Allure 报告：结果在 `target/allure-results`，`allure serve target/allure-
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/run-quality-gate.ps1
+# CI 可附带构建号，进入 quality-metrics/history/summary：
+powershell -ExecutionPolicy Bypass -File tools/run-quality-gate.ps1 -CiBuildId $env:GITHUB_RUN_ID
 ```
 
-该脚本会执行 Maven 测试并生成 `target/quality-metrics.json` 与 `target/quality-summary.md`，用于本地交接、PR 摘要或未来 CI 归档。完整说明见 [docs/engineering-closure.md](docs/engineering-closure.md)。
+该脚本会执行 Maven 测试并生成 `target/quality-metrics.json`、`target/quality-history.jsonl` 与 `target/quality-summary.md`，包含 `runId`、`ciBuildId`、commit、suite、耗时、结果和 KnownDefect 编号，用于本地交接、PR 摘要或未来 CI 归档。完整说明见 [docs/engineering-closure.md](docs/engineering-closure.md)。
 
 ## P0 用例覆盖（OrderHappyPathTest）
 
